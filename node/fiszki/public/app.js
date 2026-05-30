@@ -1,4 +1,5 @@
-// ─── API ───────────────────────────────────────────────────────────────────
+
+
 
 const api = {
   async _fetch(method, url, body) {
@@ -486,3 +487,28 @@ async function init() {
 }
 
 init();
+// ─── Real-time Updates (Socket.io) ─────────────────────────────────────────
+
+// Initialize the socket connection to the server
+// (Requires <script src="/socket.io/socket.io.js"></script> in index.html)
+const socket = io();
+
+// Listen for new flashcards arriving from students
+socket.on('new_flashcard_received', (nowaFiszka) => {
+  console.log('[Socket] Nowa fiszka z serwera:', nowaFiszka);
+
+  // 1. Dodaj nową fiszkę do globalnego stanu
+  state.fiszki.push(nowaFiszka);
+
+  // 2. Jeśli jesteśmy w trakcie nauki lub przeglądania konkretnego źródła, 
+  // upewnijmy się, że filtry są odświeżone, a pasek boczny zaktualizowany
+  renderAll();
+
+  // 3. Pokaż powiadomienie na ekranie głównym
+  // Skracamy przód fiszki do powiadomienia, żeby nie zasłonić ekranu długim tekstem
+  const krotkiPrzod = nowaFiszka.przod.length > 30 
+      ? nowaFiszka.przod.substring(0, 30) + '...' 
+      : nowaFiszka.przod;
+      
+  toast(`Nowa fiszka od ${nowaFiszka.zrodlo}: ${krotkiPrzod}`);
+});

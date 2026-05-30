@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodaj Fiszkę lub Notatki</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background-color: #f4f4f9; }
+        h2, h3 { text-align: center; color: #333; }
+        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, textarea, button { width: 100%; margin-bottom: 15px; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; border: none; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #45a049; }
+        .btn-ai { background-color: #007bff; }
+        .btn-ai:hover { background-color: #0056b3; }
+        #loadingMsg { display: none; text-align: center; color: #007bff; font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <h2>Współtwórz Notatki! 🧠</h2>
+    <input type="text" id="nazwaUcznia" placeholder="Twoje imię (opcjonalnie)">
+
+    <div class="section">
+        <h3>Dodaj pojedynczą fiszkę</h3>
+        <textarea id="przod" placeholder="Pytanie (Przód fiszki)" rows="2"></textarea>
+        <textarea id="tyl" placeholder="Odpowiedź (Tył fiszki)" rows="2"></textarea>
+        <button onclick="wyslijFiszke()">Wyślij na ekran!</button>
+    </div>
+
+    <div class="section">
+        <h3>Wygeneruj fiszki z pliku (.txt)</h3>
+        <p style="text-align:center; font-size: 14px; color: #666;">Bielik AI przeanalizuje twój plik i stworzy fiszki dla całej klasy.</p>
+        <input type="file" id="fileInput" accept=".txt">
+        <div id="loadingMsg">Bielik analizuje notatki... Proszę czekać ⏳</div>
+        <button class="btn-ai" id="btnUpload" onclick="wyslijPlik()">Przeanalizuj plik (AI)</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // 1. Ręczne dodawanie fiszki
+        function wyslijFiszke() {
+            const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
+            const przod = document.getElementById('przod').value;
+            const tyl = document.getElementById('tyl').value;
+
+            if (!przod || !tyl) return alert('Wypełnij pytanie i odpowiedź!');
+
+            socket.emit('submit_flashcard', { nazwaUcznia: nazwa, przod, tyl });
+
+            document.getElementById('przod').value = '';
+            document.getElementById('tyl').value = '';
+            alert('Fiszka wysłana!');
+        }
+
+        // 2. Upload pliku do analizy AI
+        async function wyslijPlik() {
+            const fileInput = document.getElementById('fileInput');
+            const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
+            const btn = document.getElementById('btnUpload');
+            const loader = document.getElementById('loadingMsg');
+
+            if (!fileInput.files.length) return alert('Wybierz plik .txt!');
+
+            const formData = new FormData();
+            // Twój serwer oczekuje pliku pod kluczem 'plik'
+            formData.append('plik', fileInput.files[0]);
+            
+            // Opcjonalnie: Przekazujemy imię, aby serwer mógł oznaczyć źródło
+            formData.append('studentName', nazwa);
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+
+            try {
+                // Uderzamy w endpoint z server.js
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`Sukces! Bielik wygenerował ${result.count} fiszek z Twojego pliku.`);
+                    fileInput.value = ''; // Wyczyść pole
+                } else {
+                    alert('Błąd: ' + (result.error || 'Nie udało się przeanalizować pliku.'));
+                }
+            } catch (error) {
+                alert('Błąd połączenia z serwerem.');
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+
+</body>
+</html>

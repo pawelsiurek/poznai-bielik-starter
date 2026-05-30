@@ -9,8 +9,11 @@ import express from 'express';
 import multer from 'multer';
 import { unlinkSync } from 'fs';
 import { randomUUID } from 'crypto';
+import http from 'http';               // ADDED: For WebSockets
+import { Server } from 'socket.io';    // ADDED: Socket.io library
+import os from 'os';                   // ADDED: To find your local Wi-Fi IP
 
-import { load, save }                    from './modules/storage.js';
+import { load, save } from './modules/storage.js';
 import { createClient, generateFiszki } from './modules/bielik.js';
 import { getExtractor, supportedExtensions } from './modules/extractors/index.js';
 
@@ -28,11 +31,51 @@ const bielik = createClient({
 });
 const MODEL = process.env.PCSS_MODEL || 'bielik_11b';
 
-// ─── Express ───────────────────────────────────────────────────────────────
+// ─── Express & WebSockets Setup ────────────────────────────────────────────
 
 const app = express();
+const server = http.createServer(app); // Wrapped express in HTTP server
+const io = new Server(server);         // Initialized Socket.io
+
 app.use(express.json());
 app.use(express.static(resolve(__dirname, 'public')));
+
+// ─── Real-time Communication (Socket.io) ───────────────────────────────────
+
+io.on('connection', (socket) => {
+  console.log(`[Socket] Nowe połączenie: ${socket.id}`);
+
+  // Listen for a student submitting a card
+  socket.on('submit_flashcard', (data) => {
+    const { nazwaUcznia, przod, tyl } = data;
+    
+    if (!przod?.trim() || !tyl?.trim()) return;
+
+    const fiszki = load();
+    const nowa = {
+      id: randomUUID(),
+      przod: przod.trim(),
+      tyl: tyl.trim(),
+      zrodlo: `Uczeń: ${nazwaUcznia || 'Anonim'}`, // Tags the card with the student's name
+      created: new Date().toISOString(),
+    };
+    
+    fiszki.push(nowa);
+    save(fiszki);
+
+    console.log(`[Socket] Fiszka od ucznia ${nazwaUcznia} została zapisana.`);
+
+    // Instantly broadcast the new card to everyone (including the Host screen)
+    io.emit('new_flashcard_received', nowa);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket] Odłączono: ${socket.id}`);
+  });
+});
+
+// ─── Upload + generowanie fiszek ───────────────────────────────────────────
+// (This section remains exactly the same as your original)
 
 const upload = multer({
   dest: resolve(__dirname, 'uploads'),
@@ -41,8 +84,6 @@ const upload = multer({
     cb(ok ? null : new Error(`Nieobsługiwany format. Dozwolone: ${supportedExtensions().join(', ')}`), ok);
   },
 });
-
-// ─── Upload + generowanie fiszek ───────────────────────────────────────────
 
 app.post('/api/upload', upload.single('plik'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Brak pliku lub nieobsługiwany format' });
@@ -53,7 +94,6 @@ app.post('/api/upload', upload.single('plik'), async (req, res) => {
   try {
     text = await extract(req.file.path);
   } catch (err) {
-    // Ekstraktor rzucił błąd (np. stub dla obrazów/PDF)
     try { unlinkSync(req.file.path); } catch { /* ignore */ }
     return res.status(501).json({ error: err.message });
   } finally {
@@ -80,6 +120,10 @@ app.post('/api/upload', upload.single('plik'), async (req, res) => {
     save(fiszki);
 
     console.log(`Wygenerowano ${nowe.length} fiszek.\n`);
+    
+    // Optional: Tell the host screen new AI cards arrived!
+    nowe.forEach(karta => io.emit('new_flashcard_received', karta));
+
     res.json({ fiszki: nowe, count: nowe.length });
   } catch (err) {
     console.error('Błąd generowania:', err.message);
@@ -88,6 +132,7 @@ app.post('/api/upload', upload.single('plik'), async (req, res) => {
 });
 
 // ─── CRUD fiszek ───────────────────────────────────────────────────────────
+// (This section remains exactly the same as your original)
 
 app.get('/api/fiszki', (_req, res) => res.json(load()));
 
@@ -106,6 +151,10 @@ app.post('/api/fiszki', (req, res) => {
   };
   fiszki.push(nowa);
   save(fiszki);
+  
+  // Optional: Update host screen on manual API post too
+  io.emit('new_flashcard_received', nowa);
+  
   res.status(201).json(nowa);
 });
 
@@ -138,9 +187,29 @@ app.delete('/api/fiszki', (req, res) => {
   res.json({ ok: true, deleted: fiszki.length - filtered.length });
 });
 
+// ─── Network Helper ────────────────────────────────────────────────────────
+// Finds your computer's local Wi-Fi IP address
+
+function getLocalIpAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
 // ─── Start ─────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\n🧠 Inteligentne Fiszki → http://localhost:${PORT}\n`);
+const HOST = '0.0.0.0'; // IMPORTANT: Allows external LAN connections
+
+// IMPORTANT: Use server.listen instead of app.listen
+server.listen(PORT, HOST, () => {
+  const localIp = getLocalIpAddress();
+  console.log(`\n🧠 Inteligentne Fiszki (Ekran Główny) → http://localhost:${PORT}`);
+  console.log(`📱 Link do kodu QR (dla uczniów)     → http://${localIp}:${PORT}/student.html\n`);
 });
