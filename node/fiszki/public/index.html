@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inteligentne Fiszki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">🧠 Inteligentne Fiszki</div>
+    <div class="header-score" id="header-score">
+      <span class="score-correct" id="hdr-correct" title="Poprawne odpowiedzi">✓ 0</span>
+      <span class="score-sep">/</span>
+      <span class="score-incorrect" id="hdr-incorrect" title="Błędne odpowiedzi">✗ 0</span>
+    </div>
+    <span class="header-total" id="total-count">0 fiszek</span>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-mode" title="Przełącz widok">⊞ Przeglądaj</button>
+      <button class="btn btn-primary" id="btn-add">+ Dodaj</button>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside>
+      <div class="aside-section">
+        <div class="section-title">Importuj z pliku</div>
+        <div class="upload-zone" id="dropzone">
+          <div class="upload-icon">📄</div>
+          <div class="upload-label">Przeciągnij lub kliknij</div>
+          <div class="upload-hint">Obsługiwane: .txt</div>
+        </div>
+        <input type="file" id="file-input" accept=".txt,.png,.jpg,.jpeg,.pdf">
+      </div>
+
+      <div class="aside-section">
+        <div class="section-title">Źródła</div>
+        <div id="sources-list"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <input class="search-input" id="search" type="text" placeholder="🔍 Szukaj w fiszkach...">
+        <button class="btn btn-ghost btn-sm" id="btn-shuffle" title="Losowa kolejność">⇄ Mieszaj</button>
+      </div>
+
+      <!-- Tryb nauki (domyślny) -->
+      <div id="view-study" class="view">
+        <div class="study-meta">
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <span class="progress-text" id="progress-text">1 / 0</span>
+          </div>
+        </div>
+
+        <div class="study-card-area">
+          <div class="card-wrapper study-card" id="study-card">
+            <div class="card-inner">
+              <div class="card-face card-front">
+                <div class="card-label">Pytanie</div>
+                <div class="card-text" id="study-front"></div>
+                <div class="card-footer">
+                  <span class="card-source" id="study-source"></span>
+                  <span class="flip-hint">kliknij aby odwrócić</span>
+                </div>
+              </div>
+              <div class="card-face card-back">
+                <div class="card-label">Odpowiedź</div>
+                <div class="card-text" id="study-back"></div>
+                <div class="card-footer">
+                  <span class="card-source" id="study-source-back"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="study-controls">
+          <button class="btn btn-ghost" id="btn-prev">← Poprzedni</button>
+          <button class="btn btn-danger" id="btn-incorrect" title="Nie znam tej odpowiedzi">✗ Nie znam</button>
+          <button class="btn btn-success" id="btn-correct" title="Znam tę odpowiedź">✓ Znam!</button>
+          <button class="btn btn-ghost" id="btn-next">Następny →</button>
+        </div>
+      </div>
+
+      <!-- Tryb przeglądania -->
+      <div id="view-browse" class="view" style="display:none">
+        <div class="cards-container">
+          <div class="cards-grid" id="cards-grid"></div>
+        </div>
+      </div>
+
+      <!-- Podsumowanie sesji -->
+      <div id="view-summary" class="view" style="display:none">
+        <div class="summary">
+          <div class="summary-icon">🎉</div>
+          <div class="summary-title">Sesja zakończona!</div>
+          <div class="summary-stats">
+            <div class="summary-stat correct">
+              <span class="summary-stat-num" id="sum-correct">0</span>
+              <span class="summary-stat-label">Poprawnych</span>
+            </div>
+            <div class="summary-stat incorrect">
+              <span class="summary-stat-num" id="sum-incorrect">0</span>
+              <span class="summary-stat-label">Błędnych</span>
+            </div>
+            <div class="summary-stat total">
+              <span class="summary-stat-num" id="sum-total">0</span>
+              <span class="summary-stat-label">Łącznie</span>
+            </div>
+          </div>
+          <div class="summary-pct" id="sum-pct"></div>
+          <div class="summary-actions">
+            <button class="btn btn-ghost" id="btn-restart">↩ Zacznij od nowa</button>
+            <button class="btn btn-primary" id="btn-to-browse">⊞ Przeglądaj fiszki</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pusty stan -->
+      <div id="view-empty" class="view" style="display:none">
+        <div class="empty-state">
+          <div class="empty-icon">🃏</div>
+          <div class="empty-text">Brak fiszek</div>
+          <div class="empty-hint">Wgraj plik .txt lub dodaj fiszkę ręcznie</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal: dodaj / edytuj -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Dodaj fiszkę</div>
+      <form id="modal-form">
+        <div class="form-group">
+          <label for="form-front">Przód — pytanie lub pojęcie</label>
+          <textarea id="form-front" required placeholder="Co to jest...?"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="form-back">Tył — odpowiedź lub definicja</label>
+          <textarea id="form-back" required placeholder="To jest..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Anuluj</button>
+          <button type="submit" class="btn btn-primary">Zapisz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Bielik analizuje notatki...</div>
+    <div class="loading-hint">To może potrwać chwilę</div>
+  </div>
+
+  <!-- Toasty -->
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "ca992cc4-3305-44dc-b553-618a26b5c207",
+    "przod": "ekonomia behawioralna",
+    "tyl": "Nauka badająca, jak ludzkie decyzje i zachowania odbiegają od klasycznych założeń ekonomii (np. racjonalności).",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "7cee81bf-b0b7-4643-a3eb-a77176c21b58",
+    "przod": "efekt posiadania",
+    "tyl": "Ludzie często przeceniają wartość tego, co posiadają, i niechętnie rezygnują z tego, np. niechęć do sprzedaży rzeczy za cenę zakupu.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "3c654962-531f-4612-b32e-fe593814535a",
+    "przod": "psychologia tłumu",
+    "tyl": "Dziedzina badająca wpływ tłumu na jednostki, podkreślająca zjawiska takie jak deindywidualizacja i regresja do prymitywnych zachowań.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "31790dba-2576-4942-b08b-64242ce4d020",
+    "przod": "deindywidualizacja",
+    "tyl": "Utrata poczucia indywidualnej tożsamości w grupie, co może prowadzić do ekstremalnych zachowań.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "80a8c40b-cf36-4ac0-b4ee-1d783968deb4",
+    "przod": "regresja do prymitywnych zachowań",
+    "tyl": "Tendencja do powrotu do bardziej prymitywnych, instynktownych zachowań w sytuacjach grupowych, np. podczas masowych zgromadzeń.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "4de037d4-f0d8-4db4-bba3-ec7ec852d236",
+    "przod": "sieci społecznościowe",
+    "tyl": "Platformy internetowe umożliwiające interakcje i wymianę informacji w społecznościach online, wpływające na zachowania i decyzje jednostek.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "8160b2d7-a607-4a02-b2cc-35b9794c4836",
+    "przod": "teoria gier",
+    "tyl": "Interdyscyplinarna teoria badająca strategiczne interakcje między jednostkami lub grupami, stosowana m.in. w ekonomii, polityce i biologii.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "34e90a98-93be-4a65-a61e-cfe2d7db5edf",
+    "przod": "równowaga Nasha",
+    "tyl": "Stan, w którym żadna ze stron nie ma motywacji do zmiany swojej strategii, biorąc pod uwagę strategie pozostałych uczestników.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  },
+  {
+    "id": "6cf105b4-5122-41d0-b2d3-a4c7e351335f",
+    "przod": "dylemat więźnia",
+    "tyl": "Sytuacja, w której dwaj podejrzani, przesłuchiwani osobno, mogą albo współpracować, albo zdradzić, co ilustruje teorię gier i paradoks racjonalnych decyzji indywidualnych.",
+    "zrodlo": "przyklad-notatki.txt",
+    "created": "2026-05-30T09:50:10.379Z"
+  }
+]

@@ -7,10 +7,13 @@
     "hello": "node hello-world.js",
     "chat": "node chat-starter/index.js",
     "pipeline": "node pipeline-starter/index.js",
-    "multi": "node multi-step-starter/index.js"
+    "multi": "node multi-step-starter/index.js",
+    "fiszki": "node fiszki/server.js"
   },
   "dependencies": {
     "openai": "^4.0.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "multer": "^1.4.5-lts.1"
   }
 }
