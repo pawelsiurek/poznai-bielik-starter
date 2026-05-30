@@ -46,17 +46,25 @@ async function generateForChunk(client, model, text) {
     messages: [
       {
         role: 'system',
-        content: `Analizujesz notatki edukacyjne. Wyciągnij z nich kluczowe pojęcia, definicje i fakty warte zapamiętania.
-Odpowiedz TYLKO w JSON (bez markdown): {"pojecia": ["pojecie1", "pojecie2"]}
-Maksymalnie 15 pojęć. Żadnych dodatkowych komentarzy.`,
+        content: `Jesteś systemem tworzącym fiszki edukacyjne na podstawie notatek. Twoim zadaniem jest wygenerowanie precyzyjnych pytań sprawdzających wiedzę.
+Twórz konkretne pytania lub polecenia, które testują znajomość specyficznych faktów, definicji, mechanizmów i dat z tekstu.
+
+Cechy dobrego pytania:
+1. Jest jednoznaczne i w pełni zrozumiałe bez szerszego kontekstu.
+2. Wymaga konkretnej odpowiedzi (np. "Podaj datę...", "Kim był...", "Na czym polega...").
+3. Skupia się na najważniejszych informacjach, ignorując ogólniki.
+
+Wymagania: Zadbaj o bezbłędną polszczyznę i poprawną składnię.
+Odpowiedz TYLKO w JSON (bez markdown): {"pytania": ["Pytanie 1?", "Pytanie 2?"]}
+Maksymalnie 15 pytań. Żadnych dodatkowych komentarzy poza JSON.`,
       },
       { role: 'user', content: `Notatki:\n\n${text}` },
     ],
-    max_tokens: 500,
+    max_tokens: 800, // Zwiększyłem lekko limit, bo pytania zajmują więcej tokenów niż pojedyncze słowa
   });
 
-  const pojecia = r1.choices[0].message.content;
-  console.log('  [1/2] Gotowe →', pojecia.trim().substring(0, 120));
+  const pytaniaJson = r1.choices[0].message.content;
+  console.log('  [1/2] Gotowe →', pytaniaJson.trim().substring(0, 120));
 
   console.log('  [2/2] Generuję fiszki...');
   const r2 = await client.chat.completions.create({
@@ -64,15 +72,18 @@ Maksymalnie 15 pojęć. Żadnych dodatkowych komentarzy.`,
     messages: [
       {
         role: 'system',
-        content: `Tworzysz fiszki edukacyjne. Na podstawie listy pojęć i oryginalnego tekstu stwórz pytania i odpowiedzi.
-Przód fiszki = konkretne pytanie lub pojęcie do zdefiniowania.
-Tył fiszki = zwięzła odpowiedź (max 2 zdania). NIE używaj cudzysłowów wewnątrz tekstu.
+        content: `Jesteś systemem edukacyjnym. Otrzymasz listę pytań wygenerowanych z tekstu oraz oryginalne notatki.
+Twoim zadaniem jest opracowanie tyłu fiszek na podstawie tego materiału.
+
+Przód fiszki = dokładne skopiowanie pytania z dostarczonej listy.
+Tył fiszki = zwięzła i precyzyjna odpowiedź (max 2 zdania) oparta na notatkach. NIE używaj cudzysłowów wewnątrz tekstu odpowiedzi.
+
 Odpowiedz TYLKO w JSON (bez markdown): {"fiszki": [{"przod": "...", "tyl": "..."}]}
 Żadnych dodatkowych komentarzy poza JSON.`,
       },
       {
         role: 'user',
-        content: `Pojęcia do opracowania: ${pojecia}\n\nOryginalne notatki (kontekst):\n${text.substring(0, 4000)}`,
+        content: `Wygenerowane pytania: ${pytaniaJson}\n\nOryginalne notatki (kontekst):\n${text.substring(0, 4000)}`,
       },
     ],
     max_tokens: 4000,
