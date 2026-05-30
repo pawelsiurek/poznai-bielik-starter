@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "fiszki": "npm --prefix node run fiszki"
+  }
+}
