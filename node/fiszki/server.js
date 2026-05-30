@@ -60,16 +60,17 @@ io.on('connection', (socket) => {
 
   // Listen for a student submitting a card
   socket.on('submit_flashcard', (data) => {
-    const { nazwaUcznia, przod, tyl } = data;
-    
+    const { nazwaUcznia, przod, tyl, talia } = data;
+
     if (!przod?.trim() || !tyl?.trim()) return;
 
     const fiszki = load();
     const nowa = {
-      id: randomUUID(),
-      przod: przod.trim(),
-      tyl: tyl.trim(),
-      zrodlo: `Uczeń: ${nazwaUcznia || 'Anonim'}`, // Tags the card with the student's name
+      id:      randomUUID(),
+      przod:   przod.trim(),
+      tyl:     tyl.trim(),
+      talia:   talia?.trim() || 'Ogólne',
+      zrodlo:  `Uczeń: ${nazwaUcznia || 'Anonim'}`,
       created: new Date().toISOString(),
     };
     
@@ -135,6 +136,36 @@ app.put('/api/prompts', (req, res) => {
 app.delete('/api/prompts', (_req, res) => {
   savePrompts({ ...DEFAULT_PROMPTS });
   res.json({ ok: true, prompts: DEFAULT_PROMPTS });
+});
+
+// ─── Wyjaśnienie pojęcia (💡) ──────────────────────────────────────────────
+
+app.post('/api/explain', async (req, res) => {
+  const { przod, tyl } = req.body;
+  if (!przod?.trim()) return res.status(400).json({ error: 'Brak pojęcia do wyjaśnienia' });
+
+  try {
+    const r = await bielik.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: `Jesteś ekspertem edukacyjnym i mentorem. Twoim zadaniem jest szczegółowe wyjaśnienie pojęcia z fiszki.
+Podaj: definicję, kontekst, przykłady z życia lub nauki. Odpowiadaj po polsku.
+Pisz w 2-3 paragrafach. Używaj prostego języka, ale zachowaj merytoryczną dokładność.
+Nie powtarzaj samego pytania ani odpowiedzi z fiszki — idź głębiej.`,
+        },
+        {
+          role: 'user',
+          content: `Pojęcie z fiszki: "${przod}"${tyl ? `\nZnana odpowiedź: "${tyl}"` : ''}\n\nWyjaśnij to pojęcie dokładnie.`,
+        },
+      ],
+      max_tokens: 600,
+    });
+    res.json({ explanation: r.choices[0].message.content.trim() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── Upload + generowanie fiszek ───────────────────────────────────────────
@@ -240,9 +271,13 @@ app.delete('/api/fiszki/:id', (req, res) => {
 });
 
 app.delete('/api/fiszki', (req, res) => {
-  const { zrodlo } = req.body;
+  const { talia, zrodlo } = req.body;
   const fiszki = load();
-  const filtered = zrodlo ? fiszki.filter(f => f.zrodlo !== zrodlo) : [];
+  const filtered = talia
+    ? fiszki.filter(f => (f.talia || f.zrodlo) !== talia)
+    : zrodlo
+      ? fiszki.filter(f => f.zrodlo !== zrodlo)
+      : [];
   save(filtered);
   res.json({ ok: true, deleted: fiszki.length - filtered.length });
 });

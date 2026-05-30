@@ -23,6 +23,7 @@ const api = {
   addFiszka:       (p, t, talia) => api._fetch('POST',   '/api/fiszki',       { przod: p, tyl: t, talia }),
   updateFiszka:    (id, p, t, talia) => api._fetch('PUT', `/api/fiszki/${id}`, { przod: p, tyl: t, talia }),
   deleteFiszka:    (id)          => api._fetch('DELETE', `/api/fiszki/${id}`),
+  explain:         (przod, tyl)  => api._fetch('POST',   '/api/explain',      { przod, tyl }),
   async upload(file) {
     const fd = new FormData();
     fd.append('plik', file);
@@ -33,16 +34,52 @@ const api = {
 // ─── State ─────────────────────────────────────────────────────────────────
 
 const state = {
-  fiszki:   [],
-  filtered: [],
-  decks:    [],       // lista talii
-  idx:      0,
-  flipped:  false,
-  answered: {},       // per-session, resetowane przy zmianie talii
-  mode:     'study',
-  query:    '',
-  deck:     'all',    // aktywna talia
+  fiszki:      [],
+  filtered:    [],
+  knownDecks:  [],    // talie stworzone ręcznie (localStorage), mogą być puste
+  idx:         0,
+  flipped:     false,
+  answered:    {},
+  mode:        'study',
+  query:       '',
+  deck:        'all',
 };
+
+// Persystencja talii w localStorage
+function saveKnownDecks() {
+  localStorage.setItem('fiszki_decks', JSON.stringify(state.knownDecks));
+}
+function loadKnownDecks() {
+  try { return JSON.parse(localStorage.getItem('fiszki_decks') || '[]'); } catch { return []; }
+}
+
+// ─── Progress stats (persistent per card) ──────────────────────────────────
+// Przechowuje ostatnią odpowiedź per cardId: { id: 'correct' | 'incorrect' }
+const PROGRESS_KEY = 'fiszki_progress';
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); } catch { return {}; }
+}
+function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+function updateProgress(cardId, result) {
+  const p = loadProgress();
+  p[cardId] = result;
+  saveProgress(p);
+}
+
+function getDeckStats(deckName) {
+  const cards = deckName === 'all'
+    ? state.fiszki
+    : state.fiszki.filter(f => getDeck(f) === deckName);
+  const progress = loadProgress();
+  let correct = 0, incorrect = 0;
+  cards.forEach(f => {
+    if (progress[f.id] === 'correct')   correct++;
+    if (progress[f.id] === 'incorrect') incorrect++;
+  });
+  return { total: cards.length, correct, incorrect, answered: correct + incorrect };
+}
 
 // talia fiszki — fallback do zrodlo dla starych kart
 const getDeck = f => f.talia || f.zrodlo || 'Ogólne';
@@ -83,8 +120,12 @@ const modalTitle   = $('modal-title');
 const frontInput   = $('form-front');
 const backInput    = $('form-back');
 const modalForm    = $('modal-form');
-const deckSelect   = $('form-deck');
-const deckNewInput = $('form-deck-new');
+const deckSelect      = $('form-deck');
+const deckNewInput    = $('form-deck-new');
+const uploadDeckSel   = $('upload-deck');
+const uploadDeckNew   = $('upload-deck-new');
+const newDeckWrap     = $('new-deck-wrap');
+const newDeckInput    = $('new-deck-input');
 
 let editingId = null;
 
@@ -115,12 +156,28 @@ function plural(n) {
 
 // ─── Decks helper ──────────────────────────────────────────────────────────
 
-function getUniqueDecksSorted() {
-  return [...new Set(state.fiszki.map(getDeck))].sort();
+function getAllDecks() {
+  const fromCards = state.fiszki.map(getDeck);
+  return [...new Set([...state.knownDecks, ...fromCards])].sort();
+}
+
+function populateUploadDeckSelect() {
+  const decks = getAllDecks();
+  uploadDeckSel.innerHTML = decks.map(d =>
+    `<option value="${esc(d)}" ${d === state.deck && state.deck !== 'all' ? 'selected' : ''}>${esc(d)}</option>`
+  ).join('') + `<option value="__new__">+ Nowa talia...</option>`;
+  uploadDeckSel.addEventListener('change', () => {
+    uploadDeckNew.style.display = uploadDeckSel.value === '__new__' ? '' : 'none';
+  });
+}
+
+function getUploadDeck() {
+  if (uploadDeckSel.value === '__new__') return uploadDeckNew.value.trim() || 'Ogólne';
+  return uploadDeckSel.value || 'Ogólne';
 }
 
 function populateDeckSelect(currentDeck = '') {
-  const decks = getUniqueDecksSorted();
+  const decks = getAllDecks();
   deckSelect.innerHTML = decks.map(d =>
     `<option value="${esc(d)}" ${d === currentDeck ? 'selected' : ''}>${esc(d)}</option>`
   ).join('') + `<option value="__new__">+ Nowa talia...</option>`;
@@ -239,6 +296,7 @@ function recordAnswer(result) {
   if (state.filtered.length === 0) return;
   const card = state.filtered[state.idx];
   state.answered[card.id] = result;
+  updateProgress(card.id, result);
   renderScore();
   studyCard.classList.remove('answered-correct', 'answered-incorrect');
   studyCard.classList.add(result === 'correct' ? 'answered-correct' : 'answered-incorrect');
@@ -327,10 +385,9 @@ function renderBrowse() {
 
 function renderDecks() {
   const map = {};
-  state.fiszki.forEach(f => {
-    const d = getDeck(f);
-    map[d] = (map[d] || 0) + 1;
-  });
+  state.fiszki.forEach(f => { map[getDeck(f)] = (map[getDeck(f)] || 0) + 1; });
+  // Dołącz puste talie z localStorage
+  state.knownDecks.forEach(d => { if (!(d in map)) map[d] = 0; });
 
   const allItem = `
     <div class="source-item ${state.deck === 'all' ? 'active' : ''}" data-deck="all">
@@ -342,20 +399,29 @@ function renderDecks() {
     <div class="source-item ${state.deck === d ? 'active' : ''}" data-deck="${esc(d)}">
       <span class="source-label" title="${esc(d)}">🗂 ${esc(d)}</span>
       <span class="source-count">${n}</span>
+      ${state.deck === d ? `<button class="deck-delete-btn" data-deck="${esc(d)}" title="Usuń talię">✕</button>` : ''}
     </div>`).join('');
 
   sourcesList.innerHTML = allItem + deckItems;
 
   sourcesList.querySelectorAll('.source-item').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.deck-delete-btn')) return;
       const newDeck = el.dataset.deck;
       if (newDeck !== state.deck) {
         state.deck = newDeck;
         state.idx = 0;
-        state.answered = {};  // reset score przy zmianie talii
+        state.answered = {};
         renderScore();
       }
       renderAll();
+    });
+  });
+
+  sourcesList.querySelectorAll('.deck-delete-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openDeleteDeck(btn.dataset.deck);
     });
   });
 }
@@ -368,7 +434,20 @@ function renderAll() {
   renderDecks();
   updateModeButton();
 
-  if (state.filtered.length === 0) { showView('empty'); return; }
+  if (state.filtered.length === 0) {
+    const label = $('empty-deck-label');
+    const hint  = $('empty-hint');
+    if (state.deck !== 'all') {
+      label.textContent = `📂 ${state.deck}`;
+      label.style.display = '';
+      hint.textContent = 'Ta talia jest pusta. Wgraj plik lub dodaj fiszkę ręcznie.';
+    } else {
+      label.style.display = 'none';
+      hint.textContent = 'Wgraj plik .txt lub dodaj fiszkę ręcznie';
+    }
+    showView('empty');
+    return;
+  }
 
   if (state.mode === 'study') {
     renderStudyCard();
@@ -415,7 +494,8 @@ modalForm.addEventListener('submit', async e => {
       toast('Fiszka zaktualizowana');
     } else {
       const nowa = await api.addFiszka(przod, tyl, talia);
-      state.fiszki.push(nowa);
+      // Socket może już dodać kartę przed odpowiedzią HTTP — sprawdź
+      if (!state.fiszki.find(f => f.id === nowa.id)) state.fiszki.push(nowa);
       toast('Fiszka dodana');
     }
     closeModal();
@@ -426,15 +506,47 @@ modalForm.addEventListener('submit', async e => {
 // ─── Delete ────────────────────────────────────────────────────────────────
 
 async function deleteCard(id) {
-  if (!confirm('Usunąć tę fiszkę?')) return;
   try {
     await api.deleteFiszka(id);
     state.fiszki = state.fiszki.filter(f => f.id !== id);
     delete state.answered[id];
-    toast('Fiszka usunięta');
     renderAll();
   } catch (err) { toast(err.message, 'error'); }
 }
+
+// ─── Delete deck ────────────────────────────────────────────────────────────
+
+let deleteDeckTarget = null;
+const deleteDeckOverlay = $('delete-deck-overlay');
+
+function openDeleteDeck(deckName) {
+  deleteDeckTarget = deckName;
+  $('delete-deck-name').textContent = deckName;
+  deleteDeckOverlay.classList.add('open');
+}
+
+function closeDeleteDeck() {
+  deleteDeckOverlay.classList.remove('open');
+  deleteDeckTarget = null;
+}
+
+$('delete-deck-cancel').addEventListener('click', closeDeleteDeck);
+deleteDeckOverlay.addEventListener('click', e => { if (e.target === deleteDeckOverlay) closeDeleteDeck(); });
+
+$('delete-deck-confirm').addEventListener('click', async () => {
+  if (!deleteDeckTarget) return;
+  try {
+    await api._fetch('DELETE', '/api/fiszki', { talia: deleteDeckTarget });
+    state.knownDecks = state.knownDecks.filter(d => d !== deleteDeckTarget);
+    saveKnownDecks();
+    state.fiszki = state.fiszki.filter(f => getDeck(f) !== deleteDeckTarget);
+    state.deck = 'all';
+    state.answered = {};
+    renderScore();
+    closeDeleteDeck();
+    renderAll();
+  } catch (err) { toast(err.message, 'error'); }
+});
 
 // ─── Upload ────────────────────────────────────────────────────────────────
 
@@ -447,17 +559,18 @@ async function handleFile(file) {
     isPdf ? 'PDF może wymagać 1–3 minut (modele AI)' : 'To może potrwać chwilę'
   );
   try {
-    const result = await api.upload(file);
+    const talia = getUploadDeck();
+    const fd = new FormData();
+    fd.append('plik', file);
+    fd.append('talia', talia);
+    const r = await fetch('/api/upload', { method: 'POST', body: fd });
+    const result = await r.json();
+    if (!r.ok) throw new Error(result.error);
+
     state.fiszki.push(...result.fiszki);
-    const newDeck = getDeck(result.fiszki[0]);
-    state.deck = newDeck;
-    state.idx  = 0;
+    state.deck     = talia;
+    state.idx      = 0;
     state.answered = {};
-    const { meta } = result;
-    const metaStr = meta?.chunks > 1
-      ? ` (${meta.chunks} chunki, ~${(meta.totalTokens / 1000).toFixed(1)}K tokenów)`
-      : meta?.totalTokens ? ` (~${(meta.totalTokens / 1000).toFixed(1)}K tokenów)` : '';
-    toast(`Wygenerowano ${result.count} fiszek z „${file.name}"${metaStr}`);
     renderAll();
   } catch (err) {
     toast(err.message, 'error');
@@ -548,6 +661,27 @@ $('btn-restart').addEventListener('click', resetSession);
 $('btn-to-browse').addEventListener('click', () => { state.mode = 'browse'; renderAll(); });
 $('btn-add').addEventListener('click', openAdd);
 
+// Nowa talia (sidebar)
+$('btn-new-deck').addEventListener('click', () => {
+  const visible = newDeckWrap.style.display !== 'none';
+  newDeckWrap.style.display = visible ? 'none' : '';
+  if (!visible) { newDeckInput.value = ''; newDeckInput.focus(); }
+});
+
+newDeckInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const name = newDeckInput.value.trim();
+    if (name && !state.knownDecks.includes(name)) {
+      state.knownDecks.push(name);
+      saveKnownDecks();
+    }
+    if (name) { state.deck = name; state.answered = {}; renderScore(); }
+    newDeckWrap.style.display = 'none';
+    renderAll();
+  }
+  if (e.key === 'Escape') { newDeckWrap.style.display = 'none'; }
+});
+
 searchInput.addEventListener('input', () => {
   state.query = searchInput.value;
   state.idx   = 0;
@@ -582,6 +716,7 @@ try {
 // ─── Init ──────────────────────────────────────────────────────────────────
 
 async function init() {
+  state.knownDecks = loadKnownDecks();
   try {
     const [fiszki, caps] = await Promise.all([api.getFiszki(), api.getCapabilities()]);
     state.fiszki = fiszki;
@@ -589,10 +724,7 @@ async function init() {
     const hint = $('upload-hint');
     if (hint) hint.textContent = `Obsługiwane: ${caps.activeFormats.join(', ')}`;
     fileInput.accept = caps.activeFormats.join(',');
-
-    if (!caps.docling) {
-      toast('PDF wyłączony — zainstaluj docling (pip install docling)', 'error');
-    }
+    populateUploadDeckSelect();
 
     renderScore();
     renderAll();
@@ -600,5 +732,101 @@ async function init() {
     toast('Brak połączenia z serwerem', 'error');
   }
 }
+
+// ─── Stats ─────────────────────────────────────────────────────────────────
+
+const statsOverlay  = $('stats-overlay');
+const statsContent  = $('stats-content');
+
+function renderStats() {
+  const decks = [...new Set([...state.knownDecks, ...state.fiszki.map(getDeck)])].sort();
+  if (decks.length === 0) {
+    statsContent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Brak fiszek</p>';
+    return;
+  }
+
+  let totalCorrect = 0, totalCards = 0;
+
+  statsContent.innerHTML = decks.map(deck => {
+    const s = getDeckStats(deck);
+    totalCorrect += s.correct;
+    totalCards   += s.total;
+    const pct  = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+    const fill = pct;
+    const fillColor = pct >= 75 ? 'var(--success)' : pct >= 40 ? '#e3b341' : 'var(--danger)';
+    return `
+      <div class="stat-deck">
+        <div class="stat-deck-header">
+          <span class="stat-deck-name">🗂 ${esc(deck)}</span>
+          <span class="stat-deck-pct">${s.correct}/${s.total} (${pct}%)</span>
+        </div>
+        <div class="stat-progress-bar">
+          <div class="stat-progress-fill" style="width:${fill}%; background:${fillColor}"></div>
+        </div>
+        <div class="stat-counts">
+          <span class="ok">✓ ${s.correct} poprawnych</span>
+          <span class="fail">✗ ${s.incorrect} błędnych</span>
+          <span>${s.total - s.answered} bez odpowiedzi</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  const totalPct = totalCards > 0 ? Math.round((totalCorrect / totalCards) * 100) : 0;
+  statsContent.innerHTML += `<div class="stats-total">Łącznie: ${totalCorrect}/${totalCards} fiszek (${totalPct}%)</div>`;
+}
+
+function openStats()  { renderStats(); statsOverlay.classList.add('open'); }
+function closeStats() { statsOverlay.classList.remove('open'); }
+
+statsOverlay.addEventListener('click', e => { if (e.target === statsOverlay) closeStats(); });
+$('stats-close').addEventListener('click', closeStats);
+$('btn-stats').addEventListener('click', openStats);
+
+$('stats-reset').addEventListener('click', () => {
+  if (!confirm('Zresetować wszystkie statystyki postępu?')) return;
+  saveProgress({});
+  renderStats();
+  toast('Statystyki zresetowane');
+});
+
+// ─── Explain panel (💡) ────────────────────────────────────────────────────
+
+const explainPanel    = $('explain-panel');
+const explainBackdrop = $('explain-backdrop');
+const explainConcept  = $('explain-concept');
+const explainText     = $('explain-text');
+const explainLoading  = $('explain-loading');
+const explainCache    = new Map(); // cardId → text
+
+function openExplainPanel() { explainPanel.classList.add('open'); explainBackdrop.classList.add('active'); }
+function closeExplainPanel() { explainPanel.classList.remove('open'); explainBackdrop.classList.remove('active'); }
+
+$('explain-close').addEventListener('click', closeExplainPanel);
+explainBackdrop.addEventListener('click', closeExplainPanel);
+
+$('btn-explain').addEventListener('click', async () => {
+  if (state.filtered.length === 0) return;
+  const card = state.filtered[state.idx];
+
+  explainConcept.textContent = card.przod;
+  explainText.textContent    = '';
+  openExplainPanel();
+
+  if (explainCache.has(card.id)) {
+    explainText.textContent = explainCache.get(card.id);
+    return;
+  }
+
+  explainLoading.style.display = 'flex';
+  try {
+    const { explanation } = await api.explain(card.przod, card.tyl);
+    explainText.textContent = explanation;
+    explainCache.set(card.id, explanation);
+  } catch (err) {
+    explainText.textContent = `Błąd: ${err.message}`;
+  } finally {
+    explainLoading.style.display = 'none';
+  }
+});
 
 init();

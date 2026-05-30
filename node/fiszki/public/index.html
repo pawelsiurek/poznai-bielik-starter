@@ -9,7 +9,7 @@
 <body>
 
   <header>
-    <div class="logo">🧠 Inteligentne Fiszki</div>
+    <div class="logo">Inteligentne Fiszki</div>
     <div class="header-score" id="header-score">
       <span class="score-correct"  id="hdr-correct"   title="Poprawne odpowiedzi">✓ 0</span>
       <span class="score-sep">/</span>
@@ -17,6 +17,7 @@
     </div>
     <span class="header-total" id="total-count">0 fiszek</span>
     <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-stats"   title="Statystyki postępu">📊 Postęp</button>
       <button class="btn btn-ghost btn-sm" id="btn-prompts" title="Edytuj prompty Bielika">⚙ Prompty</button>
       <button class="btn btn-ghost" id="btn-mode" title="Przełącz widok">⊞ Przeglądaj</button>
       <button class="btn btn-primary" id="btn-add">+ Dodaj</button>
@@ -34,10 +35,18 @@
           <div class="upload-hint" id="upload-hint">Obsługiwane: .txt</div>
         </div>
         <input type="file" id="file-input" accept=".txt,.pdf">
+        <select id="upload-deck" class="select-input" style="margin-top:0.5rem"></select>
+        <input id="upload-deck-new" class="text-input" placeholder="Nowa talia..." style="display:none;margin-top:0.4rem">
       </div>
 
       <div class="aside-section">
-        <div class="section-title">Talie</div>
+        <div class="section-title-row">
+          <span class="section-title">Talie</span>
+          <button class="btn-icon" id="btn-new-deck" title="Nowa talia">+</button>
+        </div>
+        <div id="new-deck-wrap" style="display:none">
+          <input id="new-deck-input" class="text-input" placeholder="Nazwa talii..." style="margin-bottom:0.4rem">
+        </div>
         <div id="sources-list"></div>
       </div>
     </aside>
@@ -85,6 +94,9 @@
           <button class="btn btn-success" id="btn-correct"   title="Znam tę odpowiedź">✓ Znam!</button>
           <button class="btn btn-ghost" id="btn-next">Następny →</button>
         </div>
+        <button class="btn-explain-trigger" id="btn-explain" title="Dowiedz się więcej od Bielika">
+          💡 Dowiedz się więcej
+        </button>
       </div>
 
       <!-- Tryb przeglądania -->
@@ -124,9 +136,10 @@
       <!-- Pusty stan -->
       <div id="view-empty" class="view" style="display:none">
         <div class="empty-state">
+          <div id="empty-deck-label" class="empty-deck-label" style="display:none"></div>
           <div class="empty-icon">🃏</div>
-          <div class="empty-text">Brak fiszek</div>
-          <div class="empty-hint">Wgraj plik .txt lub dodaj fiszkę ręcznie</div>
+          <div class="empty-text" id="empty-text">Brak fiszek</div>
+          <div class="empty-hint" id="empty-hint">Wgraj plik .txt lub dodaj fiszkę ręcznie</div>
         </div>
       </div>
 
@@ -159,6 +172,18 @@
     </div>
   </div>
 
+  <!-- Modal: potwierdź usunięcie talii -->
+  <div class="modal-overlay" id="delete-deck-overlay">
+    <div class="modal modal-sm">
+      <div class="modal-title">Usuń talię</div>
+      <p class="modal-desc">Czy na pewno chcesz usunąć talię <strong id="delete-deck-name"></strong> i wszystkie jej fiszki? Tej operacji nie można cofnąć.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="delete-deck-cancel">Anuluj</button>
+        <button type="button" class="btn btn-danger-solid" id="delete-deck-confirm">Usuń talię</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: edytor promptów -->
   <div class="modal-overlay" id="prompts-overlay">
     <div class="modal modal-wide">
@@ -188,6 +213,37 @@
 
   <!-- Toasty -->
   <div class="toast-container" id="toasts"></div>
+
+  <!-- Panel: wyjaśnienie (💡) -->
+  <div class="explain-panel" id="explain-panel">
+    <div class="explain-header">
+      <span class="explain-title">💡 Wyjaśnienie</span>
+      <button class="btn-icon" id="explain-close">✕</button>
+    </div>
+    <div class="explain-concept" id="explain-concept"></div>
+    <div class="explain-body" id="explain-body">
+      <div class="explain-loading" id="explain-loading" style="display:none">
+        <div class="spinner"></div>
+        <span>Bielik analizuje...</span>
+      </div>
+      <div class="explain-text" id="explain-text"></div>
+    </div>
+  </div>
+  <div class="explain-backdrop" id="explain-backdrop"></div>
+
+  <!-- Modal: statystyki postępu -->
+  <div class="modal-overlay" id="stats-overlay">
+    <div class="modal modal-stats">
+      <div class="stats-header">
+        <div class="modal-title">📊 Statystyki postępu</div>
+        <button class="btn-icon" id="stats-close">✕</button>
+      </div>
+      <div class="stats-content" id="stats-content"></div>
+      <div class="stats-footer">
+        <button class="btn btn-ghost btn-sm" id="stats-reset">↩ Zresetuj statystyki</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>

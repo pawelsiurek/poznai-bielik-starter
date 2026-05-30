@@ -1,102 +1,277 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodaj Fiszkę lub Notatki</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background-color: #f4f4f9; }
-        h2, h3 { text-align: center; color: #333; }
-        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, textarea, button { width: 100%; margin-bottom: 15px; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-        button { background-color: #4CAF50; color: white; border: none; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
-        button:hover { background-color: #45a049; }
-        .btn-ai { background-color: #007bff; }
-        .btn-ai:hover { background-color: #0056b3; }
-        #loadingMsg { display: none; text-align: center; color: #007bff; font-weight: bold; margin-bottom: 15px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj Fiszkę</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --danger: #f85149;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --text-subtle: #484f58;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 1.5rem 1rem 3rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.55rem 0.875rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+    select option { background: var(--surface-2); }
+
+    .field { margin-bottom: 0.1rem; }
+
+    .btn {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 0.25rem;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #79b8ff; }
+    .btn-ai { background: #238636; color: #fff; }
+    .btn-ai:hover { background: #2ea043; }
+    .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .loading-msg {
+      display: none;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 0.82rem;
+      min-height: 1.2rem;
+      margin-top: 0.5rem;
+      transition: color 0.2s;
+    }
+    .status-msg.ok  { color: var(--success); }
+    .status-msg.err { color: var(--danger); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0.75rem 0;
+    }
+
+    #new-deck-input {
+      display: none;
+      margin-top: -0.5rem;
+    }
+  </style>
 </head>
 <body>
 
-    <h2>Współtwórz Notatki! 🧠</h2>
-    <input type="text" id="nazwaUcznia" placeholder="Twoje imię (opcjonalnie)">
+  <h1>Dodaj Fiszkę</h1>
 
-    <div class="section">
-        <h3>Dodaj pojedynczą fiszkę</h3>
-        <textarea id="przod" placeholder="Pytanie (Przód fiszki)" rows="2"></textarea>
-        <textarea id="tyl" placeholder="Odpowiedź (Tył fiszki)" rows="2"></textarea>
-        <button onclick="wyslijFiszke()">Wyślij na ekran!</button>
+  <!-- Imię + talia — wspólne dla obu sekcji -->
+  <div class="card">
+    <div class="card-title">Ustawienia</div>
+    <div class="field">
+      <label for="nazwaUcznia">Twoje imię (opcjonalnie)</label>
+      <input type="text" id="nazwaUcznia" placeholder="Anonim">
     </div>
-
-    <div class="section">
-        <h3>Wygeneruj fiszki z pliku (.txt)</h3>
-        <p style="text-align:center; font-size: 14px; color: #666;">Bielik AI przeanalizuje twój plik i stworzy fiszki dla całej klasy.</p>
-        <input type="file" id="fileInput" accept=".txt">
-        <div id="loadingMsg">Bielik analizuje notatki... Proszę czekać ⏳</div>
-        <button class="btn-ai" id="btnUpload" onclick="wyslijPlik()">Przeanalizuj plik (AI)</button>
+    <div class="field">
+      <label for="talia-select">Talia</label>
+      <select id="talia-select">
+        <option value="Ogólne">Ogólne</option>
+        <option value="__new__">+ Nowa talia...</option>
+      </select>
+      <input type="text" id="new-deck-input" placeholder="Nazwa nowej talii...">
     </div>
+  </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
+  <!-- Ręczna fiszka -->
+  <div class="card">
+    <div class="card-title">Dodaj ręcznie</div>
+    <div class="field">
+      <label for="przod">Przód (pytanie)</label>
+      <textarea id="przod" placeholder="Co to jest...?" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label for="tyl">Tył (odpowiedź)</label>
+      <textarea id="tyl" placeholder="To jest..." rows="2"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="wyslijFiszke()">Wyślij fiszkę</button>
+    <div class="status-msg" id="status-manual"></div>
+  </div>
 
-        // 1. Ręczne dodawanie fiszki
-        function wyslijFiszke() {
-            const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
-            const przod = document.getElementById('przod').value;
-            const tyl = document.getElementById('tyl').value;
+  <!-- Upload AI -->
+  <div class="card">
+    <div class="card-title">Wygeneruj z pliku (AI)</div>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem">
+      Bielik przeanalizuje plik i wygeneruje fiszki dla całej klasy.
+    </p>
+    <div class="field">
+      <label for="fileInput">Plik (.txt lub .pdf)</label>
+      <input type="file" id="fileInput" accept=".txt,.pdf">
+    </div>
+    <div class="loading-msg" id="loadingMsg">Bielik analizuje... proszę czekać</div>
+    <button class="btn btn-ai" id="btnUpload" onclick="wyslijPlik()">Przeanalizuj plik (AI)</button>
+    <div class="status-msg" id="status-upload"></div>
+  </div>
 
-            if (!przod || !tyl) return alert('Wypełnij pytanie i odpowiedź!');
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
 
-            socket.emit('submit_flashcard', { nazwaUcznia: nazwa, przod, tyl });
+    // Załaduj dostępne talie
+    async function loadDecks() {
+      try {
+        const res = await fetch('/api/decks');
+        const decks = await res.json();
+        const sel = document.getElementById('talia-select');
+        sel.innerHTML = decks.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('') +
+          '<option value="__new__">+ Nowa talia...</option>';
+      } catch { /* użyj domyślnych */ }
+    }
 
-            document.getElementById('przod').value = '';
-            document.getElementById('tyl').value = '';
-            alert('Fiszka wysłana!');
+    document.getElementById('talia-select').addEventListener('change', function() {
+      const inp = document.getElementById('new-deck-input');
+      inp.style.display = this.value === '__new__' ? 'block' : 'none';
+      if (this.value === '__new__') inp.focus();
+    });
+
+    function getTalia() {
+      const sel = document.getElementById('talia-select');
+      if (sel.value === '__new__') {
+        return document.getElementById('new-deck-input').value.trim() || 'Ogólne';
+      }
+      return sel.value || 'Ogólne';
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function setStatus(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `status-msg ${type}`;
+      if (type === 'ok') setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
+    }
+
+    function wyslijFiszke() {
+      const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
+      const przod  = document.getElementById('przod').value.trim();
+      const tyl    = document.getElementById('tyl').value.trim();
+      const talia  = getTalia();
+
+      if (!przod || !tyl) { setStatus('status-manual', 'Wypełnij pytanie i odpowiedź.', 'err'); return; }
+
+      socket.emit('submit_flashcard', { nazwaUcznia: nazwa, przod, tyl, talia });
+
+      document.getElementById('przod').value = '';
+      document.getElementById('tyl').value = '';
+      setStatus('status-manual', 'Fiszka wysłana!', 'ok');
+    }
+
+    async function wyslijPlik() {
+      const fileInput = document.getElementById('fileInput');
+      const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
+      const talia  = getTalia();
+      const btn    = document.getElementById('btnUpload');
+      const loader = document.getElementById('loadingMsg');
+
+      if (!fileInput.files.length) { setStatus('status-upload', 'Wybierz plik.', 'err'); return; }
+
+      const fd = new FormData();
+      fd.append('plik', fileInput.files[0]);
+      fd.append('talia', talia);
+      fd.append('studentName', nazwa);
+
+      btn.disabled = true;
+      loader.style.display = 'block';
+      setStatus('status-upload', '', '');
+
+      try {
+        const res    = await fetch('/api/upload', { method: 'POST', body: fd });
+        const result = await res.json();
+        if (res.ok) {
+          fileInput.value = '';
+          setStatus('status-upload', `Wygenerowano ${result.count} fiszek!`, 'ok');
+        } else {
+          setStatus('status-upload', result.error || 'Błąd serwera.', 'err');
         }
+      } catch {
+        setStatus('status-upload', 'Błąd połączenia z serwerem.', 'err');
+      } finally {
+        btn.disabled = false;
+        loader.style.display = 'none';
+      }
+    }
 
-        // 2. Upload pliku do analizy AI
-        async function wyslijPlik() {
-            const fileInput = document.getElementById('fileInput');
-            const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
-            const btn = document.getElementById('btnUpload');
-            const loader = document.getElementById('loadingMsg');
-
-            if (!fileInput.files.length) return alert('Wybierz plik .txt!');
-
-            const formData = new FormData();
-            // Twój serwer oczekuje pliku pod kluczem 'plik'
-            formData.append('plik', fileInput.files[0]);
-            
-            // Opcjonalnie: Przekazujemy imię, aby serwer mógł oznaczyć źródło
-            formData.append('studentName', nazwa);
-
-            btn.disabled = true;
-            loader.style.display = 'block';
-
-            try {
-                // Uderzamy w endpoint z server.js
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert(`Sukces! Bielik wygenerował ${result.count} fiszek z Twojego pliku.`);
-                    fileInput.value = ''; // Wyczyść pole
-                } else {
-                    alert('Błąd: ' + (result.error || 'Nie udało się przeanalizować pliku.'));
-                }
-            } catch (error) {
-                alert('Błąd połączenia z serwerem.');
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-            }
-        }
-    </script>
-
+    loadDecks();
+  </script>
 </body>
 </html>
