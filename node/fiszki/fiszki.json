@@ -1,65 +1,219 @@
 [
   {
-    "id": "ca992cc4-3305-44dc-b553-618a26b5c207",
-    "przod": "ekonomia behawioralna",
-    "tyl": "Nauka badająca, jak ludzkie decyzje i zachowania odbiegają od klasycznych założeń ekonomii (np. racjonalności).",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "50a4048b-304b-4dad-80b1-1e913644315f",
+    "przod": "Manifest Agile",
+    "tyl": "Manifest Agile to dokument opisujący cztery wartości: Ludzie i interakcje ponad procesy i narzędzia, Działające oprogramowanie ponad kompleksową dokumentację, Współpraca z klientem ponad formalne ustalenia, Reagowanie na zmiany ponad realizację planu.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "7cee81bf-b0b7-4643-a3eb-a77176c21b58",
-    "przod": "efekt posiadania",
-    "tyl": "Ludzie często przeceniają wartość tego, co posiadają, i niechętnie rezygnują z tego, np. niechęć do sprzedaży rzeczy za cenę zakupu.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "6299128e-17e4-46cf-b5a0-bffa72e49289",
+    "przod": "Pryncypia Agile",
+    "tyl": "Pryncypia Agile to zasady, które podsumowują filozofię i cele metodyki Agile.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "3c654962-531f-4612-b32e-fe593814535a",
-    "przod": "psychologia tłumu",
-    "tyl": "Dziedzina badająca wpływ tłumu na jednostki, podkreślająca zjawiska takie jak deindywidualizacja i regresja do prymitywnych zachowań.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "b943056a-d343-4c5a-9d53-2fb20bcc4de0",
+    "przod": "Definicja Done",
+    "tyl": "Definition of Done (DoD) to formalny opis stanu przyrostu, kiedy spełnia on wymagania jakościowe wymagane dla produktu. Zapewnia transparentność i wspólne rozumienie 'ukończenia'.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "31790dba-2576-4942-b08b-64242ce4d020",
-    "przod": "deindywidualizacja",
-    "tyl": "Utrata poczucia indywidualnej tożsamości w grupie, co może prowadzić do ekstremalnych zachowań.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "669ffea5-da5e-48cf-b054-7885b15f72e8",
+    "przod": "Sprint",
+    "tyl": "Sprint to stały przedział czasowy (maks. miesiąc), podczas którego tworzony jest ukończony, zdatny do wydania przyrost. Nowy zaczyna się od razu po poprzednim.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "80a8c40b-cf36-4ac0-b4ee-1d783968deb4",
-    "przod": "regresja do prymitywnych zachowań",
-    "tyl": "Tendencja do powrotu do bardziej prymitywnych, instynktownych zachowań w sytuacjach grupowych, np. podczas masowych zgromadzeń.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "9a10f546-9c2c-47ee-b884-6a61085b94d2",
+    "przod": "Product Backlog",
+    "tyl": "Product Backlog to ewoluująca, uporządkowana lista wszystkiego, co potrzebne w produkcie. Zarządzana przez Właściciela Produktu.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "4de037d4-f0d8-4db4-bba3-ec7ec852d236",
-    "przod": "sieci społecznościowe",
-    "tyl": "Platformy internetowe umożliwiające interakcje i wymianę informacji w społecznościach online, wpływające na zachowania i decyzje jednostek.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "f0a64179-362f-4c25-9782-4bdf3177f016",
+    "przod": "Sprint Backlog",
+    "tyl": "Sprint Backlog to plan deweloperów na dany Sprint (Cel Sprintu + wybrane zadania) - tworzony przez Developerów.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "8160b2d7-a607-4a02-b2cc-35b9794c4836",
-    "przod": "teoria gier",
-    "tyl": "Interdyscyplinarna teoria badająca strategiczne interakcje między jednostkami lub grupami, stosowana m.in. w ekonomii, polityce i biologii.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "813c7503-f48b-4d65-aaea-b0e082ef74fc",
+    "przod": "Scrum Master",
+    "tyl": "Scrum Master to lider wspierający, który ustanawia Scruma zgodnie z Przewodnikiem Scrum, usuwa przeszkody (impediments) i dba o efektywność zespołu.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "34e90a98-93be-4a65-a61e-cfe2d7db5edf",
-    "przod": "równowaga Nasha",
-    "tyl": "Stan, w którym żadna ze stron nie ma motywacji do zmiany swojej strategii, biorąc pod uwagę strategie pozostałych uczestników.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "9bbfa3cf-b0ac-42db-9d35-24d319fc8fbb",
+    "przod": "Developerzy",
+    "tyl": "Developerzy to członkowie zespołu posiadający wszystkie umiejętności niezbędne do stworzenia użytecznego przyrostu (Increment) w każdym Sprincie. Samozarządzalni.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
   },
   {
-    "id": "6cf105b4-5122-41d0-b2d3-a4c7e351335f",
-    "przod": "dylemat więźnia",
-    "tyl": "Sytuacja, w której dwaj podejrzani, przesłuchiwani osobno, mogą albo współpracować, albo zdradzić, co ilustruje teorię gier i paradoks racjonalnych decyzji indywidualnych.",
-    "zrodlo": "przyklad-notatki.txt",
-    "created": "2026-05-30T09:50:10.379Z"
+    "id": "343c6525-0431-40f1-87b0-72c486333efb",
+    "przod": "Właściciel Produktu",
+    "tyl": "Właściciel Produktu (Product Owner) odpowiada za maksymalizację wartości produktu oraz efektywne zarządzanie Product Backlogiem. Decyduje o kolejności zadań.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
+  },
+  {
+    "id": "5a931834-60f3-428a-a37d-c448b334c3df",
+    "przod": "Filar empiryzmu",
+    "tyl": "Filar empiryzmu w Agile opiera się na transparencji, inspekcji i adaptacji, aby ciągle poprawiać produkt i procesy.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
+  },
+  {
+    "id": "216dd9e2-ad11-46ad-b4fd-174064544959",
+    "przod": "Impediments",
+    "tyl": "Impediments to przeszkody utrudniające pracę zespołowi Scrum. Scrum Master odpowiada za ich usuwanie.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
+  },
+  {
+    "id": "f1c56eb7-4425-4053-824e-c72757560207",
+    "przod": "Inkrement",
+    "tyl": "Inkrement to zdatny do wydania przyrost produktu, tworzony w każdym Sprincie.",
+    "zrodlo": "notatki_fiszki_skrocone.pdf",
+    "created": "2026-05-30T11:02:45.212Z"
+  },
+  {
+    "id": "771966f4-9f88-4216-942d-c43dfa88b41b",
+    "przod": "Single Responsibility Principle",
+    "tyl": "Klasa powinna mieć tylko jeden powód do modyfikacji, odpowiadając za jedną funkcjonalność. Zapobiega 'klasom potworom'.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "1b37d5c1-8b34-4af0-bc89-5e51584f234e",
+    "przod": "Open/Closed Principle",
+    "tyl": "Elementy systemu mają być otwarte na rozszerzenie, zamknięte na modyfikacje. Zmiany wprowadza się przez nowy kod, nie zmieniając istniejącego.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "1f0b3974-825c-4efc-bf9b-033dbb7b28b0",
+    "przod": "Liskov Substitution Principle",
+    "tyl": "Obiekty klas pochodnych mogą zastąpić obiekty klas bazowych bez wpływu na działanie programu. Łamanie kontraktu klasy nadrzędnej jest niedopuszczalne.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "3da858a2-ea9a-4ba4-9d1d-d3fa72799103",
+    "przod": "Interface Segregation Principle",
+    "tyl": "Nie zmuszać klientów do zależności od nieużywanych interfejsów. Lepiej używać mniejszych, dedykowanych interfejsów.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "daf3e471-11ef-4e86-b9ee-c21dd565f202",
+    "przod": "Dependency Inversion Principle",
+    "tyl": "Moduły wysokopoziomowe nie zależą od szczegółów, lecz od abstrakcji. Szczegóły zależą od abstrakcji.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "19539277-608c-48d1-9de9-8a4f74db303f",
+    "przod": "YAGNI",
+    "tyl": "Nie dodawaj funkcjonalności i kodu, dopóki nie są niezbędne. Minimalizuje over-engineering.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "e023af41-9df0-4db3-a5b6-da131df20142",
+    "przod": "Abstract Factory",
+    "tyl": "Tworzy rodziny powiązanych obiektów przez abstrakcyjny interfejs, izolując proces tworzenia od kodu klienckiego.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "fb7bf62a-41c0-4b77-b865-b9167220dc13",
+    "przod": "Builder",
+    "tyl": "Rozdziela proces tworzenia obiektu od jego reprezentacji, użyteczny dla złożonych obiektów z parametrami opcjonalnymi.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "97764430-6c0f-41c7-ad4f-2a040d80d03b",
+    "przod": "Singleton",
+    "tyl": "Jedna instancja w skali aplikacji, globalny dostęp. Często uważany za antywzorzec z powodu trudności w testach.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "ed822ef6-3f15-4100-8b8a-38c0c57ca1a7",
+    "przod": "Adapter",
+    "tyl": "Przekształca interfejs obiektu na oczekiwany przez klienta, umożliwiając współpracę niekompatybilnych interfejsów.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "72225f69-b1b9-40f6-a324-890040e330b2",
+    "przod": "Decorator",
+    "tyl": "Dodaje nowe zachowania do obiektu poprzez obiekt-dekorator, bez dziedziczenia.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "11349ab1-10c4-4823-9e7b-e83c04f3948b",
+    "przod": "Facade",
+    "tyl": "Udostępnia prosty interfejs dla skomplikowanych podsystemów, ukrywając wewnętrzne powiązania.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "fa84b471-e449-4b7c-bdac-dab18f105fce",
+    "przod": "Proxy",
+    "tyl": "Obiekt pośredniczący dla innego obiektu, służący do kontroli dostępu, lazy loading lub logowania.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "c32fb645-fbb9-4477-82b6-ebeb23347a24",
+    "przod": "Observer",
+    "tyl": "Powiadamia obserwatorów o zmianach stanu podmiotu, umożliwiając jednokierunkową komunikację jeden-do-wielu.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "f69a48ae-3d82-4fce-a9ca-dd3ac8a7d46c",
+    "przod": "Strategy",
+    "tyl": "Algorytm lub zachowanie wymienne; zmiana algorytmu ma minimalny wpływ na resztę systemu.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "5baca744-8b65-496b-8f91-385dab9c1e58",
+    "przod": "State",
+    "tyl": "Przechowuje i modyfikuje wewnętrzny stan obiektu, ukrywając implementację stanów przed klientem.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "2f3599d8-082a-4728-9b74-be22e916784e",
+    "przod": "CQRS",
+    "tyl": "Oddziela zapytania (Query) od poleceń (Command), optymalizując wydajność bazy danych.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "1d8ffcc3-d4e6-4834-b5ea-2dd07fd8aa62",
+    "przod": "Event Sourcing",
+    "tyl": "Zapisuje zmiany w systemie jako strumień zdarzeń, umożliwiając odbudowę stanu z historii.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "dc77b0cb-3a29-40cf-b354-cc2581715731",
+    "przod": "CAP Theorem",
+    "tyl": "W systemach rozproszonych: jedno z miar Consistency (spójność), Availability (dostępność) lub Partition Tolerance (tolerancja podziału) musi zostać poświęcone.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:03:58.916Z"
   }
 ]

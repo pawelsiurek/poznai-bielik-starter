@@ -10,9 +10,10 @@ import multer from 'multer';
 import { unlinkSync } from 'fs';
 import { randomUUID } from 'crypto';
 
-import { load, save }                    from './modules/storage.js';
-import { createClient, generateFiszki } from './modules/bielik.js';
+import { load, save }                        from './modules/storage.js';
+import { createClient, generateFiszki }      from './modules/bielik.js';
 import { getExtractor, supportedExtensions } from './modules/extractors/index.js';
+import { checkDocling }                      from './modules/extractors/pdf.js';
 
 // ─── Walidacja konfiguracji ────────────────────────────────────────────────
 
@@ -28,6 +29,17 @@ const bielik = createClient({
 });
 const MODEL = process.env.PCSS_MODEL || 'bielik_11b';
 
+// ─── Sprawdzenie Docling (nieblokujące — serwer działa bez niego) ──────────
+
+const doclingAvailable = checkDocling();
+if (doclingAvailable) {
+  console.log('✓ Docling dostępny — obsługa PDF włączona');
+} else {
+  console.warn('⚠ Docling niedostępny — obsługa PDF wyłączona');
+  console.warn('  Aby włączyć: pip install docling  (wymagany Python)');
+  console.warn('  Szczegóły: requirements.txt\n');
+}
+
 // ─── Express ───────────────────────────────────────────────────────────────
 
 const app = express();
@@ -42,6 +54,18 @@ const upload = multer({
   },
 });
 
+// ─── Endpoint: info o możliwościach serwera ────────────────────────────────
+
+app.get('/api/capabilities', (_req, res) => {
+  res.json({
+    docling: doclingAvailable,
+    formats: supportedExtensions(),
+    activeFormats: supportedExtensions().filter(ext =>
+      ext === '.txt' || (ext === '.pdf' && doclingAvailable)
+    ),
+  });
+});
+
 // ─── Upload + generowanie fiszek ───────────────────────────────────────────
 
 app.post('/api/upload', upload.single('plik'), async (req, res) => {
@@ -53,34 +77,36 @@ app.post('/api/upload', upload.single('plik'), async (req, res) => {
   try {
     text = await extract(req.file.path);
   } catch (err) {
-    // Ekstraktor rzucił błąd (np. stub dla obrazów/PDF)
     try { unlinkSync(req.file.path); } catch { /* ignore */ }
-    return res.status(501).json({ error: err.message });
+    const code = err.message.includes('nie jest zainstalowany') ? 501 : 422;
+    return res.status(code).json({ error: err.message });
   } finally {
     try { unlinkSync(req.file.path); } catch { /* ignore */ }
   }
 
-  console.log(`\nPrzetwarzam: ${req.file.originalname} (${text.length} znaków)`);
+  const ext = req.file.originalname.split('.').pop().toLowerCase();
+  console.log(`\nPrzetwarzam: ${req.file.originalname} (${text.length} znaków, format: ${ext})`);
 
   try {
-    const karty = await generateFiszki(bielik, MODEL, text);
-    if (karty.length === 0)
-      return res.status(422).json({ error: 'Bielik nie wygenerował żadnych fiszek. Sprawdź treść notatek.' });
+    const { fiszki: karty, meta } = await generateFiszki(bielik, MODEL, text);
 
-    const fiszki = load();
+    if (karty.length === 0)
+      return res.status(422).json({ error: 'Bielik nie wygenerował żadnych fiszek. Sprawdź treść pliku.' });
+
+    const all = load();
     const nowe = karty.map(k => ({
-      id: randomUUID(),
-      przod: k.przod.trim(),
-      tyl: k.tyl.trim(),
-      zrodlo: req.file.originalname,
+      id:      randomUUID(),
+      przod:   k.przod.trim(),
+      tyl:     k.tyl.trim(),
+      zrodlo:  req.file.originalname,
       created: new Date().toISOString(),
     }));
 
-    fiszki.push(...nowe);
-    save(fiszki);
+    all.push(...nowe);
+    save(all);
 
-    console.log(`Wygenerowano ${nowe.length} fiszek.\n`);
-    res.json({ fiszki: nowe, count: nowe.length });
+    console.log(`Wygenerowano ${nowe.length} fiszek (${meta.chunks} chunk(ów), ~${meta.totalTokens} tokenów)\n`);
+    res.json({ fiszki: nowe, count: nowe.length, meta });
   } catch (err) {
     console.error('Błąd generowania:', err.message);
     res.status(500).json({ error: err.message });
@@ -98,10 +124,10 @@ app.post('/api/fiszki', (req, res) => {
 
   const fiszki = load();
   const nowa = {
-    id: randomUUID(),
-    przod: przod.trim(),
-    tyl: tyl.trim(),
-    zrodlo: 'ręczna',
+    id:      randomUUID(),
+    przod:   przod.trim(),
+    tyl:     tyl.trim(),
+    zrodlo:  'ręczna',
     created: new Date().toISOString(),
   };
   fiszki.push(nowa);
@@ -116,7 +142,7 @@ app.put('/api/fiszki/:id', (req, res) => {
   if (i === -1) return res.status(404).json({ error: 'Fiszka nie znaleziona' });
 
   if (przod?.trim()) fiszki[i].przod = przod.trim();
-  if (tyl?.trim()) fiszki[i].tyl = tyl.trim();
+  if (tyl?.trim())   fiszki[i].tyl   = tyl.trim();
   fiszki[i].updated = new Date().toISOString();
   save(fiszki);
   res.json(fiszki[i]);
@@ -141,6 +167,17 @@ app.delete('/api/fiszki', (req, res) => {
 // ─── Start ─────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🧠 Inteligentne Fiszki → http://localhost:${PORT}\n`);
+});
+
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\nBłąd: port ${PORT} jest już zajęty.`);
+    console.error(`Zabij proces i spróbuj ponownie:\n`);
+    console.error(`  lsof -ti :${PORT} | xargs kill -9\n`);
+  } else {
+    console.error(`\nBłąd serwera: ${err.message}\n`);
+  }
+  process.exit(1);
 });

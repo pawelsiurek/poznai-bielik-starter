@@ -14,10 +14,11 @@ const api = {
     if (!r.ok) throw new Error(data.error || 'Błąd serwera');
     return data;
   },
-  getFiszki:      ()       => api._fetch('GET',    '/api/fiszki'),
-  addFiszka:      (p, t)   => api._fetch('POST',   '/api/fiszki',       { przod: p, tyl: t }),
-  updateFiszka:   (id,p,t) => api._fetch('PUT',    `/api/fiszki/${id}`, { przod: p, tyl: t }),
-  deleteFiszka:   (id)     => api._fetch('DELETE', `/api/fiszki/${id}`),
+  getFiszki:       ()       => api._fetch('GET',    '/api/fiszki'),
+  getCapabilities: ()       => api._fetch('GET',    '/api/capabilities'),
+  addFiszka:       (p, t)   => api._fetch('POST',   '/api/fiszki',       { przod: p, tyl: t }),
+  updateFiszka:    (id,p,t) => api._fetch('PUT',    `/api/fiszki/${id}`, { przod: p, tyl: t }),
+  deleteFiszka:    (id)     => api._fetch('DELETE', `/api/fiszki/${id}`),
   async upload(file) {
     const fd = new FormData();
     fd.append('plik', file);
@@ -64,6 +65,8 @@ const cardsGrid    = $('cards-grid');
 const sourcesList  = $('sources-list');
 const searchInput  = $('search');
 const loadingEl    = $('loading');
+const loadingText  = $('loading-text');
+const loadingHint  = $('loading-hint');
 const toastEl      = $('toasts');
 const fileInput    = $('file-input');
 const dropzone     = $('dropzone');
@@ -89,7 +92,10 @@ function toast(msg, type = 'success') {
   setTimeout(() => el.remove(), 3800);
 }
 
-function setLoading(on) { loadingEl.classList.toggle('active', on); }
+function setLoading(on, text = 'Bielik analizuje notatki...', hint = 'To może potrwać chwilę') {
+  loadingEl.classList.toggle('active', on);
+  if (on) { loadingText.textContent = text; loadingHint.textContent = hint; }
+}
 
 function plural(n) {
   if (n === 1) return '1 fiszka';
@@ -385,13 +391,22 @@ async function deleteCard(id) {
 
 async function handleFile(file) {
   if (!file) return;
-  setLoading(true);
+  const isPdf = file.name.toLowerCase().endsWith('.pdf');
+  setLoading(
+    true,
+    isPdf ? 'Docling przetwarza PDF...' : 'Bielik analizuje notatki...',
+    isPdf ? 'PDF może wymagać 1–3 minut (modele AI)' : 'To może potrwać chwilę'
+  );
   try {
     const result = await api.upload(file);
     state.fiszki.push(...result.fiszki);
     state.source = file.name;
     state.idx = 0;
-    toast(`Wygenerowano ${result.count} fiszek z „${file.name}"`);
+    const { meta } = result;
+    const metaStr = meta.chunks > 1
+      ? ` (${meta.chunks} chunki, ~${(meta.totalTokens / 1000).toFixed(1)}K tokenów)`
+      : meta.totalTokens ? ` (~${(meta.totalTokens / 1000).toFixed(1)}K tokenów)` : '';
+    toast(`Wygenerowano ${result.count} fiszek z „${file.name}"${metaStr}`);
     renderAll();
   } catch (err) {
     toast(err.message, 'error');
@@ -477,7 +492,18 @@ document.addEventListener('keydown', e => {
 
 async function init() {
   try {
-    state.fiszki = await api.getFiszki();
+    const [fiszki, caps] = await Promise.all([api.getFiszki(), api.getCapabilities()]);
+    state.fiszki = fiszki;
+
+    // Aktualizuj hint i file input na podstawie faktycznych możliwości serwera
+    const hint = $('upload-hint');
+    if (hint) hint.textContent = `Obsługiwane: ${caps.activeFormats.join(', ')}`;
+    fileInput.accept = caps.activeFormats.join(',');
+
+    if (!caps.docling) {
+      toast('PDF wyłączony — zainstaluj docling (pip install docling)', 'error');
+    }
+
     renderScore();
     renderAll();
   } catch {

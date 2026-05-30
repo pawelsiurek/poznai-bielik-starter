@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { chunkByHeadings, estimateTokens, MAX_INPUT_TOKENS } from './tokenizer.js';
 
 export function createClient({ apiKey, baseURL }) {
   return new OpenAI({ apiKey, baseURL });
@@ -33,8 +34,13 @@ function extractFiszki(raw) {
   throw new Error(`Bielik zwrócił nieprawidłowy JSON. Fragment: ${raw.substring(0, 200)}`);
 }
 
-export async function generateFiszki(client, model, text) {
-  console.log('[Etap 1] Wyciągam pojęcia...');
+async function generateForChunk(client, model, text) {
+  const tokens = estimateTokens(text);
+  if (tokens > MAX_INPUT_TOKENS) {
+    throw new Error(`Chunk za duży: ~${tokens} tokenów (limit: ${MAX_INPUT_TOKENS})`);
+  }
+
+  console.log('  [1/2] Wyciągam pojęcia z tekstu...');
   const r1 = await client.chat.completions.create({
     model,
     messages: [
@@ -50,9 +56,9 @@ Maksymalnie 15 pojęć. Żadnych dodatkowych komentarzy.`,
   });
 
   const pojecia = r1.choices[0].message.content;
-  console.log('[Etap 1] Gotowe:', pojecia.substring(0, 150), '...');
+  console.log('  [1/2] Gotowe →', pojecia.trim().substring(0, 120));
 
-  console.log('[Etap 2] Generuję fiszki...');
+  console.log('  [2/2] Generuję fiszki...');
   const r2 = await client.chat.completions.create({
     model,
     messages: [
@@ -72,8 +78,38 @@ Odpowiedz TYLKO w JSON (bez markdown): {"fiszki": [{"przod": "...", "tyl": "..."
     max_tokens: 4000,
   });
 
-  const raw = r2.choices[0].message.content;
-  console.log('[Etap 2] Gotowe (fragment):', raw.substring(0, 200), '...');
+  const fiszki = extractFiszki(r2.choices[0].message.content)
+    .filter(f => f.przod?.trim() && f.tyl?.trim());
+  console.log('  [2/2] Gotowe →', fiszki.length, 'fiszek');
+  return fiszki;
+}
 
-  return extractFiszki(raw).filter(f => f.przod?.trim() && f.tyl?.trim());
+/**
+ * Zwraca { fiszki: [], meta: { chunks, totalTokens, chunkTokens[] } }
+ */
+export async function generateFiszki(client, model, text) {
+  const totalTokens = estimateTokens(text);
+  const chunks = chunkByHeadings(text);
+
+  console.log('\n─────────────────────────────────');
+  console.log(`[Bielik] Tekst: ~${totalTokens} tokenów → ${chunks.length} chunk(ów)`);
+
+  const allFiszki = [];
+  const chunkTokens = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const t = estimateTokens(chunks[i]);
+    chunkTokens.push(t);
+    console.log(`[Etap 1+2] Chunk ${i + 1}/${chunks.length} (~${t} tokenów) (${Math.round(t/26000*100)}% okna kontekstowego)...`);
+    const fiszki = await generateForChunk(client, model, chunks[i]);
+    console.log(`           → ${fiszki.length} fiszek`);
+    allFiszki.push(...fiszki);
+  }
+
+  console.log('─────────────────────────────────');
+  console.log('[Bielik] Łącznie:', allFiszki.length, 'fiszek z', chunks.length, 'chunk(ów)');
+  return {
+    fiszki: allFiszki,
+    meta: { chunks: chunks.length, totalTokens, chunkTokens },
+  };
 }

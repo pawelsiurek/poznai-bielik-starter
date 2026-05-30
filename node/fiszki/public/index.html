@@ -30,9 +30,9 @@
         <div class="upload-zone" id="dropzone">
           <div class="upload-icon">📄</div>
           <div class="upload-label">Przeciągnij lub kliknij</div>
-          <div class="upload-hint">Obsługiwane: .txt</div>
+          <div class="upload-hint" id="upload-hint">Obsługiwane: .txt</div>
         </div>
-        <input type="file" id="file-input" accept=".txt,.png,.jpg,.jpeg,.pdf">
+        <input type="file" id="file-input" accept=".txt,.pdf">
       </div>
 
       <div class="aside-section">
@@ -156,8 +156,8 @@
   <!-- Loading overlay -->
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
-    <div class="loading-text">Bielik analizuje notatki...</div>
-    <div class="loading-hint">To może potrwać chwilę</div>
+    <div class="loading-text" id="loading-text">Bielik analizuje notatki...</div>
+    <div class="loading-hint" id="loading-hint">To może potrwać chwilę</div>
   </div>
 
   <!-- Toasty -->

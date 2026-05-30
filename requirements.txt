@@ -1,0 +1,21 @@
+# Wymagania Python do projektu fiszki
+#
+# Instalacja:
+#   pip install -r requirements.txt
+#
+# Po instalacji sprawdź czy docling jest w PATH:
+#   docling --version
+#
+# Jeśli komenda nie działa, dodaj ~/.local/bin do PATH:
+#   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc  # macOS zsh
+#   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc # Linux/bash
+#   source ~/.zshrc   (lub ~/.bashrc)
+#
+# Weryfikacja pełna:
+#   which docling      <- powinno pokazać ścieżkę
+#   docling --version  <- powinno pokazać wersję
+#
+# Docling pobiera modele AI przy pierwszym użyciu (~1-2 GB).
+# Pierwsze uruchomienie może potrwać kilka minut.
+
+docling>=2.0.0
