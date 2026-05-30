@@ -17,6 +17,7 @@ import { load, save }                        from './modules/storage.js';
 import { createClient, generateFiszki }      from './modules/bielik.js';
 import { getExtractor, supportedExtensions } from './modules/extractors/index.js';
 import { checkDocling }                      from './modules/extractors/pdf.js';
+import { loadPrompts, savePrompts, DEFAULT_PROMPTS } from './modules/config.js';
 
 // ─── Walidacja konfiguracji ────────────────────────────────────────────────
 
@@ -109,8 +110,34 @@ app.get('/api/capabilities', (_req, res) => {
   });
 });
 
-// ─── Upload + generowanie fiszek ───────────────────────────────────────────
+// ─── Talie (Decks) ─────────────────────────────────────────────────────────
 
+app.get('/api/decks', (_req, res) => {
+  const fiszki = load();
+  const decks = [...new Set(fiszki.map(f => f.talia || f.zrodlo).filter(Boolean))].sort();
+  res.json(decks);
+});
+
+// ─── Prompty ───────────────────────────────────────────────────────────────
+
+app.get('/api/prompts', (_req, res) => {
+  res.json({ ...loadPrompts(), defaults: DEFAULT_PROMPTS });
+});
+
+app.put('/api/prompts', (req, res) => {
+  const { etap1, etap2 } = req.body;
+  if (!etap1?.trim() || !etap2?.trim())
+    return res.status(400).json({ error: 'Wymagane pola: etap1 i etap2' });
+  savePrompts({ etap1: etap1.trim(), etap2: etap2.trim() });
+  res.json({ ok: true });
+});
+
+app.delete('/api/prompts', (_req, res) => {
+  savePrompts({ ...DEFAULT_PROMPTS });
+  res.json({ ok: true, prompts: DEFAULT_PROMPTS });
+});
+
+// ─── Upload + generowanie fiszek ───────────────────────────────────────────
 
 app.post('/api/upload', upload.single('plik'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Brak pliku lub nieobsługiwany format' });
@@ -132,16 +159,19 @@ app.post('/api/upload', upload.single('plik'), async (req, res) => {
   console.log(`\nPrzetwarzam: ${req.file.originalname} (${text.length} znaków, format: ${ext})`);
 
   try {
-    const { fiszki: karty, meta } = await generateFiszki(bielik, MODEL, text);
+    const prompts = loadPrompts();
+    const { fiszki: karty, meta } = await generateFiszki(bielik, MODEL, text, prompts);
 
     if (karty.length === 0)
       return res.status(422).json({ error: 'Bielik nie wygenerował żadnych fiszek. Sprawdź treść pliku.' });
 
     const all = load();
+    const talia = req.body.talia?.trim() || req.file.originalname;
     const nowe = karty.map(k => ({
       id:      randomUUID(),
       przod:   k.przod.trim(),
       tyl:     k.tyl.trim(),
+      talia,
       zrodlo:  req.file.originalname,
       created: new Date().toISOString(),
     }));
@@ -168,11 +198,13 @@ app.post('/api/fiszki', (req, res) => {
   if (!przod?.trim() || !tyl?.trim())
     return res.status(400).json({ error: 'Wymagane pola: przod i tyl' });
 
+  const { talia } = req.body;
   const fiszki = load();
   const nowa = {
     id:      randomUUID(),
     przod:   przod.trim(),
     tyl:     tyl.trim(),
+    talia:   talia?.trim() || 'Ogólne',
     zrodlo:  'ręczna',
     created: new Date().toISOString(),
   };
@@ -186,13 +218,14 @@ app.post('/api/fiszki', (req, res) => {
 });
 
 app.put('/api/fiszki/:id', (req, res) => {
-  const { przod, tyl } = req.body;
+  const { przod, tyl, talia } = req.body;
   const fiszki = load();
   const i = fiszki.findIndex(f => f.id === req.params.id);
   if (i === -1) return res.status(404).json({ error: 'Fiszka nie znaleziona' });
 
-  if (przod?.trim()) fiszki[i].przod = przod.trim();
-  if (tyl?.trim())   fiszki[i].tyl   = tyl.trim();
+  if (przod?.trim())  fiszki[i].przod  = przod.trim();
+  if (tyl?.trim())    fiszki[i].tyl    = tyl.trim();
+  if (talia?.trim())  fiszki[i].talia  = talia.trim();
   fiszki[i].updated = new Date().toISOString();
   save(fiszki);
   res.json(fiszki[i]);

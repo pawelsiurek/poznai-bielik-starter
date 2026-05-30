@@ -215,5 +215,170 @@
     "tyl": "W systemach rozproszonych: jedno z miar Consistency (spójność), Availability (dostępność) lub Partition Tolerance (tolerancja podziału) musi zostać poświęcone.",
     "zrodlo": "notatki_fiszki_rozszerzone.pdf",
     "created": "2026-05-30T11:03:58.916Z"
+  },
+  {
+    "id": "c9ed23be-1fb4-437f-a9da-45d342fccd85",
+    "przod": "Jaka zasada projektowa mówi, że klasa powinna mieć tylko jeden powód do modyfikacji?",
+    "tyl": "Zasada Jednej Odpowiedzialności (Single Responsibility Principle).",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.965Z"
+  },
+  {
+    "id": "05eb8cbd-8c50-4e47-ab1c-ac4ba02c79cd",
+    "przod": "Która zasada projektowa wymaga, aby elementy systemu były otwarte na rozszerzenie, ale zamknięte na modyfikacje?",
+    "tyl": "Zasada Otwarte/Zamknięte (Open/Closed Principle).",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "2f9e74a6-a9af-4bb5-ba62-e74242ce2e28",
+    "przod": "Czym jest zasada Liskov Substitution Principle?",
+    "tyl": "Obiekty klas pochodnych muszą być w stanie zastąpić obiekty klas bazowych bez wpływu na poprawność działania programu.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "07b13bc3-9f65-4d7d-9b64-86ce64d72308",
+    "przod": "Co oznacza zasada Interface Segregation Principle?",
+    "tyl": "Klienci nie powinni być zmuszani do zależenia od interfejsów, których nie używają. Lepiej stworzyć wiele małych interfejsów niż jeden duży.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "8c38cce3-0f42-42d0-813d-739266bf26e9",
+    "przod": "Jak brzmi zasada Dependency Inversion Principle?",
+    "tyl": "Moduły wysokopoziomowe nie powinny zależeć od modułów niskopoziomowych. Oba powinny zależeć od abstrakcji.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "c0ac2bc9-aa3d-4866-ba1e-f5fbd5159b7b",
+    "przod": "Która zasada mówi, że nie należy dodawać funkcjonalności dopóki nie stanie się ona absolutnie niezbędna?",
+    "tyl": "Zasada YAGNI (You Aren't Gonna Need It).",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "d6d4ed81-132d-4052-984e-2ae75eb50a94",
+    "przod": "Jaki wzorzec kreacyjny dostarcza interfejs do tworzenia rodzin powiązanych obiektów bez określania ich konkretnych klas?",
+    "tyl": "Wzorzec Fabryka Abstrakcyjna (Abstract Factory).",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "64edef87-06b7-4aa2-b7be-866e6f11bf0b",
+    "przod": "Wzorzec Budowniczy rozdziela proces konstruowania złożonego obiektu od jego reprezentacji, dlaczego to przydatne?",
+    "tyl": "Umożliwia tworzenie różnych reprezentacji tego samego obiektu przy użyciu tego samego procesu konstrukcyjnego, szczególnie dla obiektów z wieloma parametrami.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "3d330908-e750-47a0-8b19-7508324025bf",
+    "przod": "Dlaczego wzorzec Singleton jest czasem uważany za antywzorzec?",
+    "tyl": "Utrudnia testowanie jednostkowe i wprowadza ukryte stany globalne.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "a708cd55-5f00-40cb-99d0-04080e58c6b5",
+    "przod": "Czym jest adapter w kontekście wzorców strukturalnych?",
+    "tyl": "Przekształca interfejs klasy na inny interfejs, którego oczekują klienci, umożliwiając współdziałanie niekompatybilnych klas.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "1e55b2b4-22b2-44e0-9198-5acb12429809",
+    "przod": "Jak działa wzorzec Dekorator?",
+    "tyl": "Dynamicznie dodaje nowe odpowiedzialności do obiektu przez opakowanie go w obiekt dekoratora implementujący ten sam interfejs.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "3af58842-fde5-4a14-97db-e5f436db904f",
+    "przod": "Co robi wzorzec Fasada?",
+    "tyl": "Udostępnia prosty interfejs wysokiego poziomu dla całego podsystemu, ukrywając złożoność wewnętrzną przed klientem.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "ba80b614-cfeb-4fbb-a98f-0db5c02d4ee5",
+    "przod": "Jakie możliwości oferuje wzorzec Proksy?",
+    "tyl": "Zapewnia obiekt pośredniczący dla innego obiektu w celu kontrolowania dostępu (np. leniwe ładowanie, uprawnienia, logowanie).",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "3991bbed-086a-4d94-b2e4-840774318df6",
+    "przod": "Wzorzec Obserwator definiuje zależność jeden-do-wielu, co oznacza to w praktyce?",
+    "tyl": "Kiedy stan obiektu (podmiotu) się zmienia, wszyscy jego obserwatorzy są powiadamiani i aktualizowani.",
+    "zrodlo": "notatki_fiszki_rozszerzone.pdf",
+    "created": "2026-05-30T11:34:11.966Z"
+  },
+  {
+    "id": "c2b6bb60-1170-4472-9c04-aa4f9c022289",
+    "przod": "Jakie dwa podstawowe typy komórek wyróżniamy w organizmach żywych?",
+    "tyl": "Prokariotyczne (bezjądrowe) i eukariotyczne (jądrowe).",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "6a1290ee-52a7-41ba-bc3f-3b90c39b914f",
+    "przod": "W jakim celu komórka eukariotyczna jest podzielona systemem błon wewnątrzkomórkowych?",
+    "tyl": "Umożliwia jednoczesne zachodzenie przeciwstawnych procesów chemicznych bez ryzyka ich wzajemnego zakłócania.",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "c545237a-0ba8-4484-b515-3c51cca0b326",
+    "przod": "Jakie organellum odpowiada za przechowywanie materiału genetycznego i replikację DNA?",
+    "tyl": "Jądro komórkowe.",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "101042d4-6552-4f70-a71f-7deaec01c875",
+    "przod": "Gdzie zachodzi oddychanie komórkowe i generowanie energii w postaci ATP?",
+    "tyl": "W mitochondrium.",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "479b104a-eecc-4b6e-9399-aaa70b72b440",
+    "przod": "Jakie białko integralne odpowiada za transport jonów sodu i potasu wbrew gradientowi stężeń?",
+    "tyl": "Pompa sodowo-potasowa (Na+/K+-ATP-aza).",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "430820e7-cbc4-4e6f-935a-29f3e865d52f",
+    "przod": "Które elementy budują cytoszkielet komórki eukariotycznej?",
+    "tyl": "Mikrotubule, mikrofilamenty i filamenty pośrednie.",
+    "zrodlo": "notatki_biologia_komorka.pdf",
+    "created": "2026-05-30T11:41:33.428Z"
+  },
+  {
+    "id": "64cd0a18-f5c2-46a3-9c39-f507dde808f2",
+    "przod": "cd",
+    "tyl": "dd",
+    "talia": "notatki_fiszki_rozszerzone.pdf",
+    "zrodlo": "ręczna",
+    "created": "2026-05-30T11:58:44.150Z"
+  },
+  {
+    "id": "0bb187f5-5ac2-4911-a3ba-43b26a268071",
+    "przod": "d",
+    "tyl": "d",
+    "talia": "nowa",
+    "zrodlo": "ręczna",
+    "created": "2026-05-30T11:59:04.263Z"
+  },
+  {
+    "id": "1044c626-93de-4cfe-b0bd-9b57b50c86d4",
+    "przod": "cx",
+    "tyl": "cd",
+    "talia": "fizyka",
+    "zrodlo": "ręczna",
+    "created": "2026-05-30T11:59:42.775Z",
+    "updated": "2026-05-30T11:59:54.960Z"
   }
 ]

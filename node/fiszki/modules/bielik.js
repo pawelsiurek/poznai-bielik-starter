@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { chunkByHeadings, estimateTokens, MAX_INPUT_TOKENS } from './tokenizer.js';
+import { DEFAULT_PROMPTS } from './config.js';
 
 export function createClient({ apiKey, baseURL }) {
   return new OpenAI({ apiKey, baseURL });
@@ -34,7 +35,7 @@ function extractFiszki(raw) {
   throw new Error(`Bielik zwrócił nieprawidłowy JSON. Fragment: ${raw.substring(0, 200)}`);
 }
 
-async function generateForChunk(client, model, text) {
+async function generateForChunk(client, model, text, prompts) {
   const tokens = estimateTokens(text);
   if (tokens > MAX_INPUT_TOKENS) {
     throw new Error(`Chunk za duży: ~${tokens} tokenów (limit: ${MAX_INPUT_TOKENS})`);
@@ -44,23 +45,10 @@ async function generateForChunk(client, model, text) {
   const r1 = await client.chat.completions.create({
     model,
     messages: [
-      {
-        role: 'system',
-        content: `Jesteś systemem tworzącym fiszki edukacyjne na podstawie notatek. Twoim zadaniem jest wygenerowanie precyzyjnych pytań sprawdzających wiedzę.
-Twórz konkretne pytania lub polecenia, które testują znajomość specyficznych faktów, definicji, mechanizmów i dat z tekstu.
-
-Cechy dobrego pytania:
-1. Jest jednoznaczne i w pełni zrozumiałe bez szerszego kontekstu.
-2. Wymaga konkretnej odpowiedzi (np. "Podaj datę...", "Kim był...", "Na czym polega...").
-3. Skupia się na najważniejszych informacjach, ignorując ogólniki.
-
-Wymagania: Zadbaj o bezbłędną polszczyznę i poprawną składnię.
-Odpowiedz TYLKO w JSON (bez markdown): {"pytania": ["Pytanie 1?", "Pytanie 2?"]}
-Maksymalnie 15 pytań. Żadnych dodatkowych komentarzy poza JSON.`,
-      },
-      { role: 'user', content: `Notatki:\n\n${text}` },
+      { role: 'system', content: prompts.etap1 },
+      { role: 'user',   content: `Notatki:\n\n${text}` },
     ],
-    max_tokens: 800, // Zwiększyłem lekko limit, bo pytania zajmują więcej tokenów niż pojedyncze słowa
+    max_tokens: 800,
   });
 
   const pytaniaJson = r1.choices[0].message.content;
@@ -70,17 +58,7 @@ Maksymalnie 15 pytań. Żadnych dodatkowych komentarzy poza JSON.`,
   const r2 = await client.chat.completions.create({
     model,
     messages: [
-      {
-        role: 'system',
-        content: `Jesteś systemem edukacyjnym. Otrzymasz listę pytań wygenerowanych z tekstu oraz oryginalne notatki.
-Twoim zadaniem jest opracowanie tyłu fiszek na podstawie tego materiału.
-
-Przód fiszki = dokładne skopiowanie pytania z dostarczonej listy.
-Tył fiszki = zwięzła i precyzyjna odpowiedź (max 2 zdania) oparta na notatkach. NIE używaj cudzysłowów wewnątrz tekstu odpowiedzi.
-
-Odpowiedz TYLKO w JSON (bez markdown): {"fiszki": [{"przod": "...", "tyl": "..."}]}
-Żadnych dodatkowych komentarzy poza JSON.`,
-      },
+      { role: 'system', content: prompts.etap2 },
       {
         role: 'user',
         content: `Wygenerowane pytania: ${pytaniaJson}\n\nOryginalne notatki (kontekst):\n${text.substring(0, 4000)}`,
@@ -98,7 +76,8 @@ Odpowiedz TYLKO w JSON (bez markdown): {"fiszki": [{"przod": "...", "tyl": "..."
 /**
  * Zwraca { fiszki: [], meta: { chunks, totalTokens, chunkTokens[] } }
  */
-export async function generateFiszki(client, model, text) {
+export async function generateFiszki(client, model, text, prompts = null) {
+  prompts = { ...DEFAULT_PROMPTS, ...prompts };
   const totalTokens = estimateTokens(text);
   const chunks = chunkByHeadings(text);
 
@@ -112,7 +91,7 @@ export async function generateFiszki(client, model, text) {
     const t = estimateTokens(chunks[i]);
     chunkTokens.push(t);
     console.log(`[Etap 1+2] Chunk ${i + 1}/${chunks.length} (~${t} tokenów) (${Math.round(t/26000*100)}% okna kontekstowego)...`);
-    const fiszki = await generateForChunk(client, model, chunks[i]);
+    const fiszki = await generateForChunk(client, model, chunks[i], prompts);
     console.log(`           → ${fiszki.length} fiszek`);
     allFiszki.push(...fiszki);
   }

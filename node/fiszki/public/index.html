@@ -11,12 +11,13 @@
   <header>
     <div class="logo">🧠 Inteligentne Fiszki</div>
     <div class="header-score" id="header-score">
-      <span class="score-correct" id="hdr-correct" title="Poprawne odpowiedzi">✓ 0</span>
+      <span class="score-correct"  id="hdr-correct"   title="Poprawne odpowiedzi">✓ 0</span>
       <span class="score-sep">/</span>
       <span class="score-incorrect" id="hdr-incorrect" title="Błędne odpowiedzi">✗ 0</span>
     </div>
     <span class="header-total" id="total-count">0 fiszek</span>
     <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-prompts" title="Edytuj prompty Bielika">⚙ Prompty</button>
       <button class="btn btn-ghost" id="btn-mode" title="Przełącz widok">⊞ Przeglądaj</button>
       <button class="btn btn-primary" id="btn-add">+ Dodaj</button>
     </div>
@@ -36,7 +37,7 @@
       </div>
 
       <div class="aside-section">
-        <div class="section-title">Źródła</div>
+        <div class="section-title">Talie</div>
         <div id="sources-list"></div>
       </div>
     </aside>
@@ -80,8 +81,8 @@
 
         <div class="study-controls">
           <button class="btn btn-ghost" id="btn-prev">← Poprzedni</button>
-          <button class="btn btn-danger" id="btn-incorrect" title="Nie znam tej odpowiedzi">✗ Nie znam</button>
-          <button class="btn btn-success" id="btn-correct" title="Znam tę odpowiedź">✓ Znam!</button>
+          <button class="btn btn-danger"  id="btn-incorrect" title="Nie znam tej odpowiedzi">✗ Nie znam</button>
+          <button class="btn btn-success" id="btn-correct"   title="Znam tę odpowiedź">✓ Znam!</button>
           <button class="btn btn-ghost" id="btn-next">Następny →</button>
         </div>
       </div>
@@ -114,7 +115,7 @@
           </div>
           <div class="summary-pct" id="sum-pct"></div>
           <div class="summary-actions">
-            <button class="btn btn-ghost" id="btn-restart">↩ Zacznij od nowa</button>
+            <button class="btn btn-ghost"   id="btn-restart">↩ Zacznij od nowa</button>
             <button class="btn btn-primary" id="btn-to-browse">⊞ Przeglądaj fiszki</button>
           </div>
         </div>
@@ -132,7 +133,7 @@
     </main>
   </div>
 
-  <!-- Modal: dodaj / edytuj -->
+  <!-- Modal: dodaj / edytuj fiszkę -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
       <div class="modal-title" id="modal-title">Dodaj fiszkę</div>
@@ -145,11 +146,36 @@
           <label for="form-back">Tył — odpowiedź lub definicja</label>
           <textarea id="form-back" required placeholder="To jest..."></textarea>
         </div>
+        <div class="form-group">
+          <label for="form-deck">Talia</label>
+          <select id="form-deck" class="select-input"></select>
+          <input id="form-deck-new" class="text-input" placeholder="Nazwa nowej talii..." style="display:none; margin-top:0.4rem">
+        </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="modal-cancel">Anuluj</button>
           <button type="submit" class="btn btn-primary">Zapisz</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: edytor promptów -->
+  <div class="modal-overlay" id="prompts-overlay">
+    <div class="modal modal-wide">
+      <div class="modal-title">⚙ Prompty Bielika</div>
+      <div class="form-group">
+        <label for="prompt-etap1">Etap 1 — generowanie pytań z tekstu</label>
+        <textarea id="prompt-etap1" rows="7"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="prompt-etap2">Etap 2 — generowanie odpowiedzi (tyły fiszek)</label>
+        <textarea id="prompt-etap2" rows="7"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="prompts-reset">↩ Przywróć domyślne</button>
+        <button type="button" class="btn btn-ghost" id="prompts-cancel">Anuluj</button>
+        <button type="button" class="btn btn-primary" id="prompts-save">Zapisz</button>
+      </div>
     </div>
   </div>
 
@@ -164,7 +190,6 @@
   <div class="toast-container" id="toasts"></div>
 
   <script src="/socket.io/socket.io.js"></script>
-  
   <script src="app.js"></script>
 </body>
 </html>

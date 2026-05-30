@@ -508,6 +508,8 @@ main {
   animation: modalIn 0.18s ease;
 }
 
+.modal-wide { width: min(720px, 96vw); }
+
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(8px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
@@ -518,6 +520,35 @@ main {
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
 
 label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+
+.select-input, .text-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.875rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.select-input:focus, .text-input:focus { border-color: var(--accent); }
+.select-input option { background: var(--surface-2); }
+
+.deck-badge {
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: 600;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
 
 textarea {
   background: var(--surface-2);
