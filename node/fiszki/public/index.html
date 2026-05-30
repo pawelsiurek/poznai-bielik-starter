@@ -10,14 +10,8 @@
 
   <header>
     <div class="logo">Inteligentne Fiszki</div>
-    <div class="header-score" id="header-score">
-      <span class="score-correct"  id="hdr-correct"   title="Poprawne odpowiedzi">✓ 0</span>
-      <span class="score-sep">/</span>
-      <span class="score-incorrect" id="hdr-incorrect" title="Błędne odpowiedzi">✗ 0</span>
-    </div>
-    <span class="header-total" id="total-count">0 fiszek</span>
+<span class="header-total" id="total-count">0 fiszek</span>
     <div class="header-actions">
-      <button class="btn btn-ghost btn-sm" id="btn-stats"   title="Statystyki postępu">📊 Postęp</button>
       <button class="btn btn-ghost btn-sm" id="btn-prompts" title="Edytuj prompty Bielika">⚙ Prompty</button>
       <button class="btn btn-ghost" id="btn-mode" title="Przełącz widok">⊞ Przeglądaj</button>
       <button class="btn btn-primary" id="btn-add">+ Dodaj</button>
@@ -35,8 +29,11 @@
           <div class="upload-hint" id="upload-hint">Obsługiwane: .txt</div>
         </div>
         <input type="file" id="file-input" accept=".txt,.pdf">
-        <select id="upload-deck" class="select-input" style="margin-top:0.5rem"></select>
-        <input id="upload-deck-new" class="text-input" placeholder="Nowa talia..." style="display:none;margin-top:0.4rem">
+        <button class="upload-deck-toggle" id="upload-deck-toggle">🗂 Przypisz do talii ▾</button>
+        <div id="upload-deck-wrap" style="display:none">
+          <select id="upload-deck" class="select-input"></select>
+          <input id="upload-deck-new" class="text-input" placeholder="Nowa talia..." style="display:none;margin-top:0.4rem">
+        </div>
       </div>
 
       <div class="aside-section">
@@ -101,6 +98,10 @@
 
       <!-- Tryb przeglądania -->
       <div id="view-browse" class="view" style="display:none">
+        <div id="browse-progress" class="browse-progress" style="display:none">
+          <div class="browse-progress-bar"><div class="browse-progress-fill" id="browse-progress-fill"></div></div>
+          <span class="browse-progress-text" id="browse-progress-text"></span>
+        </div>
         <div class="cards-container">
           <div class="cards-grid" id="cards-grid"></div>
         </div>
@@ -271,20 +272,6 @@
     </div>
   </div>
   <div class="explain-backdrop" id="explain-backdrop"></div>
-
-  <!-- Modal: statystyki postępu -->
-  <div class="modal-overlay" id="stats-overlay">
-    <div class="modal modal-stats">
-      <div class="stats-header">
-        <div class="modal-title">📊 Statystyki postępu</div>
-        <button class="btn-icon" id="stats-close">✕</button>
-      </div>
-      <div class="stats-content" id="stats-content"></div>
-      <div class="stats-footer">
-        <button class="btn btn-ghost btn-sm" id="stats-reset">↩ Zresetuj statystyki</button>
-      </div>
-    </div>
-  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>

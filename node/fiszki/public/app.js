@@ -103,8 +103,6 @@ const studySrcBack = $('study-source-back');
 const progressFill = $('progress-fill');
 const progressText = $('progress-text');
 
-const hdrCorrect   = $('hdr-correct');
-const hdrIncorrect = $('hdr-incorrect');
 const totalCount   = $('total-count');
 
 const cardsGrid    = $('cards-grid');
@@ -123,8 +121,17 @@ const backInput    = $('form-back');
 const modalForm    = $('modal-form');
 const deckSelect      = $('form-deck');
 const deckNewInput    = $('form-deck-new');
-const uploadDeckSel   = $('upload-deck');
-const uploadDeckNew   = $('upload-deck-new');
+const uploadDeckSel    = $('upload-deck');
+const uploadDeckNew    = $('upload-deck-new');
+const uploadDeckWrap   = $('upload-deck-wrap');
+const uploadDeckToggle = $('upload-deck-toggle');
+
+uploadDeckToggle.addEventListener('click', () => {
+  const open = uploadDeckWrap.style.display !== 'none';
+  uploadDeckWrap.style.display = open ? 'none' : '';
+  uploadDeckToggle.textContent = open ? '🗂 Przypisz do talii ▾' : '🗂 Przypisz do talii ▴';
+  uploadDeckToggle.classList.toggle('open', !open);
+});
 const newDeckWrap     = $('new-deck-wrap');
 const newDeckInput    = $('new-deck-input');
 
@@ -231,11 +238,7 @@ function getScore() {
   };
 }
 
-function renderScore() {
-  const s = getScore();
-  hdrCorrect.textContent   = `✓ ${s.correct}`;
-  hdrIncorrect.textContent = `✗ ${s.incorrect}`;
-}
+function renderScore() {}
 
 // ─── View switching ────────────────────────────────────────────────────────
 
@@ -326,7 +329,21 @@ function resetSession() {
 // ─── Browse mode ───────────────────────────────────────────────────────────
 
 function renderBrowse() {
-  const cards = state.filtered;
+  const cards    = state.filtered;
+  const progress = loadProgress();
+  const browseProgressEl = $('browse-progress');
+
+  // Pasek postępu — tylko dla konkretnej talii
+  if (state.deck !== 'all' && cards.length > 0) {
+    const s = getDeckStats(state.deck);
+    const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+    $('browse-progress-fill').style.width = `${pct}%`;
+    $('browse-progress-text').textContent =
+      `${s.correct}/${s.total} nauczonych (${pct}%)  ·  ✗ ${s.incorrect} błędnych  ·  ${s.total - s.answered} bez odpowiedzi`;
+    browseProgressEl.style.display = '';
+  } else {
+    browseProgressEl.style.display = 'none';
+  }
 
   if (cards.length === 0) {
     cardsGrid.innerHTML = `
@@ -338,9 +355,13 @@ function renderBrowse() {
   }
 
   cardsGrid.innerHTML = cards.map(f => {
-    const deck = getDeck(f);
+    const deck    = getDeck(f);
+    const ans     = progress[f.id];
+    const progCls = ans === 'correct'   ? 'card-learned'
+                  : ans === 'incorrect' ? 'card-not-learned'
+                  : state.deck !== 'all' ? 'card-not-learned' : '';
     return `
-    <div class="card-wrapper grid-card-wrapper" data-id="${f.id}">
+    <div class="card-wrapper grid-card-wrapper ${progCls}" data-id="${f.id}">
       <div class="card-inner">
         <div class="card-face card-front">
           <div class="card-label">Pytanie</div>
@@ -797,61 +818,6 @@ async function init() {
   }
 }
 
-// ─── Stats ─────────────────────────────────────────────────────────────────
-
-const statsOverlay  = $('stats-overlay');
-const statsContent  = $('stats-content');
-
-function renderStats() {
-  const decks = [...new Set([...state.knownDecks, ...state.fiszki.map(getDeck)])].sort();
-  if (decks.length === 0) {
-    statsContent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Brak fiszek</p>';
-    return;
-  }
-
-  let totalCorrect = 0, totalCards = 0;
-
-  statsContent.innerHTML = decks.map(deck => {
-    const s = getDeckStats(deck);
-    totalCorrect += s.correct;
-    totalCards   += s.total;
-    const pct  = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
-    const fill = pct;
-    const fillColor = pct >= 75 ? 'var(--success)' : pct >= 40 ? '#e3b341' : 'var(--danger)';
-    return `
-      <div class="stat-deck">
-        <div class="stat-deck-header">
-          <span class="stat-deck-name">🗂 ${esc(deck)}</span>
-          <span class="stat-deck-pct">${s.correct}/${s.total} (${pct}%)</span>
-        </div>
-        <div class="stat-progress-bar">
-          <div class="stat-progress-fill" style="width:${fill}%; background:${fillColor}"></div>
-        </div>
-        <div class="stat-counts">
-          <span class="ok">✓ ${s.correct} poprawnych</span>
-          <span class="fail">✗ ${s.incorrect} błędnych</span>
-          <span>${s.total - s.answered} bez odpowiedzi</span>
-        </div>
-      </div>`;
-  }).join('');
-
-  const totalPct = totalCards > 0 ? Math.round((totalCorrect / totalCards) * 100) : 0;
-  statsContent.innerHTML += `<div class="stats-total">Łącznie: ${totalCorrect}/${totalCards} fiszek (${totalPct}%)</div>`;
-}
-
-function openStats()  { renderStats(); statsOverlay.classList.add('open'); }
-function closeStats() { statsOverlay.classList.remove('open'); }
-
-statsOverlay.addEventListener('click', e => { if (e.target === statsOverlay) closeStats(); });
-$('stats-close').addEventListener('click', closeStats);
-$('btn-stats').addEventListener('click', openStats);
-
-$('stats-reset').addEventListener('click', () => {
-  if (!confirm('Zresetować wszystkie statystyki postępu?')) return;
-  saveProgress({});
-  renderStats();
-  toast('Statystyki zresetowane');
-});
 
 // ─── Explain panel (💡) ────────────────────────────────────────────────────
 

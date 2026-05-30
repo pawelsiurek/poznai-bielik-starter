@@ -134,13 +134,9 @@
 
   <h1>Dodaj Fiszkę</h1>
 
-  <!-- Imię + talia — wspólne dla obu sekcji -->
+  <!-- Talia — wspólna dla obu sekcji -->
   <div class="card">
     <div class="card-title">Ustawienia</div>
-    <div class="field">
-      <label for="nazwaUcznia">Twoje imię (opcjonalnie)</label>
-      <input type="text" id="nazwaUcznia" placeholder="Anonim">
-    </div>
     <div class="field">
       <label for="talia-select">Talia</label>
       <select id="talia-select">
@@ -236,14 +232,13 @@
     }
 
     function wyslijFiszke() {
-      const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
       const przod  = document.getElementById('przod').value.trim();
       const tyl    = document.getElementById('tyl').value.trim();
       const talia  = getTalia();
 
       if (!przod || !tyl) { setStatus('status-manual', 'Wypełnij pytanie i odpowiedź.', 'err'); return; }
 
-      socket.emit('submit_flashcard', { nazwaUcznia: nazwa, przod, tyl, talia });
+      socket.emit('submit_flashcard', { przod, tyl, talia });
 
       document.getElementById('przod').value = '';
       document.getElementById('tyl').value = '';
@@ -252,7 +247,6 @@
 
     async function wyslijPlik() {
       const fileInput = document.getElementById('fileInput');
-      const nazwa = document.getElementById('nazwaUcznia').value || 'Anonim';
       const talia  = getTalia();
       const btn    = document.getElementById('btnUpload');
       const loader = document.getElementById('loadingMsg');
@@ -262,7 +256,6 @@
       const fd = new FormData();
       fd.append('plik', fileInput.files[0]);
       fd.append('talia', talia);
-      fd.append('studentName', nazwa);
 
       btn.disabled = true;
       loader.style.display = 'block';
