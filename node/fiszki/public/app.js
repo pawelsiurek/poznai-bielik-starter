@@ -572,20 +572,50 @@ $('delete-deck-confirm').addEventListener('click', async () => {
   } catch (err) { toast(err.message, 'error'); }
 });
 
+// ─── Image resize (client-side, przed wysłaniem) ───────────────────────────
+
+const IMAGE_EXTS = /\.(png|jpe?g|webp|bmp)$/i;
+
+async function resizeImage(file, maxPx = 1920, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; }
+      if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('Resize failed')); return; }
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Load failed')); };
+    img.src = url;
+  });
+}
+
 // ─── Upload ────────────────────────────────────────────────────────────────
 
 async function handleFile(file) {
   if (!file) return;
-  const isPdf = file.name.toLowerCase().endsWith('.pdf');
+  const isPdf    = file.name.toLowerCase().endsWith('.pdf');
+  const isImage  = IMAGE_EXTS.test(file.name);
+
   setLoading(
     true,
-    isPdf ? 'Docling przetwarza PDF...' : 'Bielik analizuje notatki...',
-    isPdf ? 'PDF może wymagać 1–3 minut (modele AI)' : 'To może potrwać chwilę'
+    isImage ? 'Qwen3-VL analizuje obraz...' : isPdf ? 'Docling przetwarza PDF...' : 'Bielik analizuje notatki...',
+    isImage ? 'OCR może potrwać 30–120 sekund' : isPdf ? 'PDF może wymagać 1–3 minut' : 'To może potrwać chwilę'
   );
+
   try {
-    const talia = getUploadDeck();
+    const talia      = getUploadDeck();
+    const uploadFile = isImage ? await resizeImage(file).catch(() => file) : file;
     const fd = new FormData();
-    fd.append('plik', file);
+    fd.append('plik', uploadFile);
     fd.append('talia', talia);
     const r = await fetch('/api/upload', { method: 'POST', body: fd });
     const result = await r.json();

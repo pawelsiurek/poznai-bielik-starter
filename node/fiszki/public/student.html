@@ -191,6 +191,27 @@
     <div class="status-msg" id="status-upload"></div>
   </div>
 
+  <!-- Zdjęcie → OCR (Qwen3-VL) → fiszki -->
+  <div class="card">
+    <div class="card-title">Zdjęcie notatek (AI)</div>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem">
+      Zrób zdjęcie notatek — Qwen3-VL odczyta tekst, Bielik wygeneruje fiszki.
+    </p>
+    <div class="field">
+      <!-- Dwa ukryte inputy: jeden wymusza aparat, drugi galerię -->
+      <input type="file" id="imageCameraInput" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="imageGalleryInput" accept="image/*"                      style="display:none">
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem">
+        <button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imageCameraInput').click()">📷 Aparat</button>
+        <button type="button" class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imageGalleryInput').click()">🖼 Galeria</button>
+      </div>
+      <img id="imagePreview" style="display:none; max-width:100%; border-radius:6px; border:1px solid var(--border)">
+    </div>
+    <div class="loading-msg" id="loadingImg">Qwen3-VL analizuje obraz... (30–120s)</div>
+    <button class="btn btn-ai" id="btnImage" onclick="wyslijZdjecie()">Przeanalizuj zdjęcie (AI)</button>
+    <div class="status-msg" id="status-image"></div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
@@ -304,6 +325,80 @@
         setStatus('status-notatki', 'Błąd połączenia.', 'err');
       } finally {
         btn.disabled = false;
+      }
+    }
+
+    let currentImageFile = null;
+
+    function onImageSelected(input) {
+      const preview = document.getElementById('imagePreview');
+      const file = input.files[0];
+      if (!file) return;
+      currentImageFile = file;
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    }
+
+    document.getElementById('imageCameraInput').addEventListener('change', function() { onImageSelected(this); });
+    document.getElementById('imageGalleryInput').addEventListener('change', function() { onImageSelected(this); });
+
+    // Resize zdjęcia client-side (max 1920px, JPEG 82%)
+    async function resizeImage(file, maxPx = 1920, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          let { width: w, height: h } = img;
+          if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; }
+          if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(blob => {
+            if (!blob) { reject(); return; }
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+        img.src = url;
+      });
+    }
+
+    async function wyslijZdjecie() {
+      const imageInput = document.getElementById('imageInput');
+      const talia = getTalia();
+      const btn   = document.getElementById('btnImage');
+      const loader = document.getElementById('loadingImg');
+
+      if (!currentImageFile) { setStatus('status-image', 'Wybierz zdjęcie (aparat lub galeria).', 'err'); return; }
+
+      btn.disabled = true;
+      loader.style.display = 'block';
+      setStatus('status-image', '', '');
+
+      try {
+        const original   = currentImageFile;
+        const uploadFile = await resizeImage(original).catch(() => original);
+
+        const fd = new FormData();
+        fd.append('plik', uploadFile);
+        fd.append('talia', talia);
+
+        const res    = await fetch('/api/upload', { method: 'POST', body: fd });
+        const result = await res.json();
+        if (res.ok) {
+          currentImageFile = null;
+          document.getElementById('imagePreview').style.display = 'none';
+          setStatus('status-image', `Wygenerowano ${result.count} fiszek!`, 'ok');
+        } else {
+          setStatus('status-image', result.error || 'Błąd serwera.', 'err');
+        }
+      } catch {
+        setStatus('status-image', 'Błąd połączenia z serwerem.', 'err');
+      } finally {
+        btn.disabled = false;
+        loader.style.display = 'none';
       }
     }
 

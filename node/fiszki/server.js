@@ -17,6 +17,7 @@ import { load, save }                        from './modules/storage.js';
 import { createClient, generateFiszki }      from './modules/bielik.js';
 import { getExtractor, supportedExtensions } from './modules/extractors/index.js';
 import { checkDocling }                      from './modules/extractors/pdf.js';
+import { initQwenClient }                    from './modules/extractors/image.js';
 import { loadPrompts, savePrompts, DEFAULT_PROMPTS } from './modules/config.js';
 
 // ─── Walidacja konfiguracji ────────────────────────────────────────────────
@@ -27,11 +28,16 @@ if (!apiKey || apiKey === 'twój_klucz_tutaj' || apiKey === '') {
   process.exit(1);
 }
 
-const bielik = createClient({
-  apiKey,
-  baseURL: process.env.PCSS_BASE_URL || 'https://llm.hpc.psnc.pl/v1',
-});
-const MODEL = process.env.PCSS_MODEL || 'bielik_11b';
+const PCSS_BASE_URL = process.env.PCSS_BASE_URL || 'https://llm.hpc.psnc.pl/v1';
+
+const bielik = createClient({ apiKey, baseURL: PCSS_BASE_URL });
+const MODEL  = process.env.PCSS_MODEL || 'bielik_11b';
+
+// ─── Qwen3-VL (OCR zdjęć) — ten sam klucz i endpoint co Bielik ────────────
+
+const QWEN_MODEL = process.env.QWEN_MODEL || 'Qwen3-VL-235B-A22B-Instruct-FP8';
+initQwenClient(createClient({ apiKey, baseURL: PCSS_BASE_URL }), QWEN_MODEL);
+console.log(`✓ Qwen3-VL skonfigurowany: ${QWEN_MODEL}`);
 
 // ─── Sprawdzenie Docling (nieblokujące — serwer działa bez niego) ──────────
 
@@ -101,12 +107,17 @@ const upload = multer({
 
 // ─── Endpoint: info o możliwościach serwera ────────────────────────────────
 
+const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.webp', '.bmp'];
+
 app.get('/api/capabilities', (_req, res) => {
   res.json({
     docling: doclingAvailable,
+    qwen:    true,
     formats: supportedExtensions(),
     activeFormats: supportedExtensions().filter(ext =>
-      ext === '.txt' || (ext === '.pdf' && doclingAvailable)
+      ext === '.txt' ||
+      (ext === '.pdf' && doclingAvailable) ||
+      IMAGE_EXTS.includes(ext)
     ),
   });
 });
