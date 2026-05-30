@@ -24,6 +24,7 @@ const api = {
   updateFiszka:    (id, p, t, talia) => api._fetch('PUT', `/api/fiszki/${id}`, { przod: p, tyl: t, talia }),
   deleteFiszka:    (id)          => api._fetch('DELETE', `/api/fiszki/${id}`),
   explain:         (przod, tyl)  => api._fetch('POST',   '/api/explain',      { przod, tyl }),
+  generateText:    (text, talia) => api._fetch('POST',   '/api/generate',     { text, talia }),
   async upload(file) {
     const fd = new FormData();
     fd.append('plik', file);
@@ -161,6 +162,20 @@ function getAllDecks() {
   return [...new Set([...state.knownDecks, ...fromCards])].sort();
 }
 
+function populateGenericSelect(selectEl, newInputEl, currentDeck = '') {
+  const decks = getAllDecks();
+  selectEl.innerHTML = decks.map(d =>
+    `<option value="${esc(d)}" ${d === currentDeck ? 'selected' : ''}>${esc(d)}</option>`
+  ).join('') + `<option value="__new__">+ Nowa talia...</option>`;
+  newInputEl.style.display = 'none';
+  newInputEl.value = '';
+  if (currentDeck && !decks.includes(currentDeck)) {
+    selectEl.value = '__new__';
+    newInputEl.value = currentDeck;
+    newInputEl.style.display = '';
+  }
+}
+
 function populateUploadDeckSelect() {
   const decks = getAllDecks();
   uploadDeckSel.innerHTML = decks.map(d =>
@@ -177,19 +192,7 @@ function getUploadDeck() {
 }
 
 function populateDeckSelect(currentDeck = '') {
-  const decks = getAllDecks();
-  deckSelect.innerHTML = decks.map(d =>
-    `<option value="${esc(d)}" ${d === currentDeck ? 'selected' : ''}>${esc(d)}</option>`
-  ).join('') + `<option value="__new__">+ Nowa talia...</option>`;
-
-  if (currentDeck && !decks.includes(currentDeck)) {
-    deckSelect.value = '__new__';
-    deckNewInput.value = currentDeck;
-    deckNewInput.style.display = '';
-  } else {
-    deckNewInput.style.display = 'none';
-    deckNewInput.value = '';
-  }
+  populateGenericSelect(deckSelect, deckNewInput, currentDeck);
 }
 
 deckSelect.addEventListener('change', () => {
@@ -659,7 +662,66 @@ $('btn-shuffle').addEventListener('click', () => {
 
 $('btn-restart').addEventListener('click', resetSession);
 $('btn-to-browse').addEventListener('click', () => { state.mode = 'browse'; renderAll(); });
-$('btn-add').addEventListener('click', openAdd);
+// ─── Choice modal (Dodaj) ──────────────────────────────────────────────────
+
+const addChoiceOverlay  = $('add-choice-overlay');
+const textModalOverlay  = $('text-modal-overlay');
+const textModalInput    = $('text-modal-input');
+const textModalDeckSel  = $('text-modal-deck');
+const textModalDeckNew  = $('text-modal-deck-new');
+
+function openAddChoice() { addChoiceOverlay.classList.add('open'); }
+function closeAddChoice() { addChoiceOverlay.classList.remove('open'); }
+
+function openTextModal() {
+  closeAddChoice();
+  populateGenericSelect(textModalDeckSel, textModalDeckNew, state.deck !== 'all' ? state.deck : '');
+  textModalInput.value = '';
+  textModalOverlay.classList.add('open');
+  textModalInput.focus();
+}
+function closeTextModal() { textModalOverlay.classList.remove('open'); }
+
+function getTextModalDeck() {
+  return textModalDeckSel.value === '__new__'
+    ? textModalDeckNew.value.trim() || 'Ogólne'
+    : textModalDeckSel.value || 'Ogólne';
+}
+
+addChoiceOverlay.addEventListener('click', e => { if (e.target === addChoiceOverlay) closeAddChoice(); });
+textModalOverlay.addEventListener('click', e => { if (e.target === textModalOverlay) closeTextModal(); });
+$('choice-manual').addEventListener('click', () => { closeAddChoice(); openAdd(); });
+$('choice-text').addEventListener('click', openTextModal);
+$('text-modal-cancel').addEventListener('click', closeTextModal);
+
+textModalDeckSel.addEventListener('change', () => {
+  textModalDeckNew.style.display = textModalDeckSel.value === '__new__' ? '' : 'none';
+});
+
+$('text-modal-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const text  = textModalInput.value.trim();
+  const talia = getTextModalDeck();
+  if (!text) return;
+
+  closeTextModal();
+  setLoading(true, 'Bielik analizuje notatki...', 'To może potrwać chwilę');
+  try {
+    const result = await api.generateText(text, talia);
+    state.fiszki.push(...result.fiszki.filter(n => !state.fiszki.find(f => f.id === n.id)));
+    state.deck     = talia;
+    state.idx      = 0;
+    state.answered = {};
+    renderScore();
+    renderAll();
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+});
+
+$('btn-add').addEventListener('click', openAddChoice);
 
 // Nowa talia (sidebar)
 $('btn-new-deck').addEventListener('click', () => {
@@ -689,10 +751,12 @@ searchInput.addEventListener('input', () => {
 });
 
 document.addEventListener('keydown', e => {
-  if (promptsOverlay.classList.contains('open') || modalOverlay.classList.contains('open')) {
-    if (e.key === 'Escape') { closeModal(); closePromptsModal(); }
+  if (e.key === 'Escape') {
+    closeModal(); closePromptsModal(); closeAddChoice(); closeTextModal();
     return;
   }
+  if (promptsOverlay.classList.contains('open') || modalOverlay.classList.contains('open') ||
+      addChoiceOverlay.classList.contains('open') || textModalOverlay.classList.contains('open')) return;
   if (state.mode !== 'study' || state.filtered.length === 0) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
@@ -796,7 +860,20 @@ const explainBackdrop = $('explain-backdrop');
 const explainConcept  = $('explain-concept');
 const explainText     = $('explain-text');
 const explainLoading  = $('explain-loading');
-const explainCache    = new Map(); // cardId → text
+const explainCache    = new Map();
+
+function stripMarkdown(text) {
+  return text
+    .replace(/#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/gs, '$1')
+    .replace(/\*(.+?)\*/gs, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 function openExplainPanel() { explainPanel.classList.add('open'); explainBackdrop.classList.add('active'); }
 function closeExplainPanel() { explainPanel.classList.remove('open'); explainBackdrop.classList.remove('active'); }
@@ -820,8 +897,9 @@ $('btn-explain').addEventListener('click', async () => {
   explainLoading.style.display = 'flex';
   try {
     const { explanation } = await api.explain(card.przod, card.tyl);
-    explainText.textContent = explanation;
-    explainCache.set(card.id, explanation);
+    const clean = stripMarkdown(explanation);
+    explainText.textContent = clean;
+    explainCache.set(card.id, clean);
   } catch (err) {
     explainText.textContent = `Błąd: ${err.message}`;
   } finally {

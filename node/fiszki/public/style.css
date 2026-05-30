@@ -566,6 +566,33 @@ main {
 
 .modal-wide { width: min(720px, 96vw); }
 .modal-sm   { width: min(400px, 92vw); }
+.modal-text { width: min(540px, 96vw); }
+
+.add-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.add-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.25rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+  color: var(--text);
+}
+.add-choice-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+.choice-icon  { font-size: 1.6rem; }
+.choice-label { font-size: 0.9rem; font-weight: 600; }
+.choice-desc  { font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; }
 
 .modal-desc {
   font-size: 0.875rem;

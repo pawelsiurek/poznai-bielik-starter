@@ -146,6 +146,47 @@
     </main>
   </div>
 
+  <!-- Modal: wybór trybu dodawania -->
+  <div class="modal-overlay" id="add-choice-overlay">
+    <div class="modal modal-sm">
+      <div class="modal-title">Dodaj fiszki</div>
+      <div class="add-choice-grid">
+        <button class="add-choice-btn" id="choice-text">
+          <span class="choice-icon">📝</span>
+          <span class="choice-label">Wklej notatki</span>
+          <span class="choice-desc">AI wygeneruje fiszki z tekstu</span>
+        </button>
+        <button class="add-choice-btn" id="choice-manual">
+          <span class="choice-icon">✏️</span>
+          <span class="choice-label">Dodaj ręcznie</span>
+          <span class="choice-desc">Wpisz przód i tył fiszki</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: wklej notatki -->
+  <div class="modal-overlay" id="text-modal-overlay">
+    <div class="modal modal-text">
+      <div class="modal-title">📝 Wklej notatki</div>
+      <form id="text-modal-form">
+        <div class="form-group">
+          <label for="text-modal-input">Tekst / notatki</label>
+          <textarea id="text-modal-input" required placeholder="Wklej tutaj tekst notatek..." style="min-height:160px"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="text-modal-deck">Talia</label>
+          <select id="text-modal-deck" class="select-input"></select>
+          <input id="text-modal-deck-new" class="text-input" placeholder="Nowa talia..." style="display:none;margin-top:0.4rem">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="text-modal-cancel">Anuluj</button>
+          <button type="submit" class="btn btn-primary">Generuj fiszki (AI)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: dodaj / edytuj fiszkę -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">

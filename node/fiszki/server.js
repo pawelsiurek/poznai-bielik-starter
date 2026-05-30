@@ -153,7 +153,8 @@ app.post('/api/explain', async (req, res) => {
           content: `Jesteś ekspertem edukacyjnym i mentorem. Twoim zadaniem jest szczegółowe wyjaśnienie pojęcia z fiszki.
 Podaj: definicję, kontekst, przykłady z życia lub nauki. Odpowiadaj po polsku.
 Pisz w 2-3 paragrafach. Używaj prostego języka, ale zachowaj merytoryczną dokładność.
-Nie powtarzaj samego pytania ani odpowiedzi z fiszki — idź głębiej.`,
+Nie powtarzaj samego pytania ani odpowiedzi z fiszki — idź głębiej.
+WAŻNE: Pisz WYŁĄCZNIE zwykłym tekstem. BEZ markdown, BEZ gwiazdek, BEZ hashtagów, BEZ list numerowanych.`,
         },
         {
           role: 'user',
@@ -164,6 +165,40 @@ Nie powtarzaj samego pytania ani odpowiedzi z fiszki — idź głębiej.`,
     });
     res.json({ explanation: r.choices[0].message.content.trim() });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Generowanie fiszek z wklejonego tekstu ────────────────────────────────
+
+app.post('/api/generate', async (req, res) => {
+  const { text, talia } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'Brak tekstu' });
+
+  console.log(`\nGeneruję z tekstu (${text.length} znaków)`);
+  try {
+    const prompts = loadPrompts();
+    const { fiszki: karty, meta } = await generateFiszki(bielik, MODEL, text.trim(), prompts);
+
+    if (karty.length === 0)
+      return res.status(422).json({ error: 'Bielik nie wygenerował żadnych fiszek. Sprawdź treść tekstu.' });
+
+    const all  = load();
+    const nowe = karty.map(k => ({
+      id:      randomUUID(),
+      przod:   k.przod.trim(),
+      tyl:     k.tyl.trim(),
+      talia:   talia?.trim() || 'Ogólne',
+      zrodlo:  'tekst',
+      created: new Date().toISOString(),
+    }));
+    all.push(...nowe);
+    save(all);
+    nowe.forEach(k => io.emit('new_flashcard_received', k));
+    console.log(`Wygenerowano ${nowe.length} fiszek z tekstu\n`);
+    res.json({ fiszki: nowe, count: nowe.length, meta });
+  } catch (err) {
+    console.error('Błąd generowania z tekstu:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

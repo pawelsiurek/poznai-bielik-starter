@@ -166,6 +166,20 @@
     <div class="status-msg" id="status-manual"></div>
   </div>
 
+  <!-- Wklej notatki → AI -->
+  <div class="card">
+    <div class="card-title">Wklej notatki (AI)</div>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem">
+      Wklej tekst notatek — Bielik wygeneruje fiszki dla całej klasy.
+    </p>
+    <div class="field">
+      <label for="notatkiInput">Tekst / notatki</label>
+      <textarea id="notatkiInput" placeholder="Wklej tutaj tekst ze schowka..." rows="6"></textarea>
+    </div>
+    <button class="btn btn-ai" onclick="wyslijNotatki()">Generuj fiszki z tekstu (AI)</button>
+    <div class="status-msg" id="status-notatki"></div>
+  </div>
+
   <!-- Upload AI -->
   <div class="card">
     <div class="card-title">Wygeneruj z pliku (AI)</div>
@@ -268,6 +282,35 @@
       } finally {
         btn.disabled = false;
         loader.style.display = 'none';
+      }
+    }
+
+    async function wyslijNotatki() {
+      const text  = document.getElementById('notatkiInput').value.trim();
+      const talia = getTalia();
+      if (!text) { setStatus('status-notatki', 'Wklej tekst notatek.', 'err'); return; }
+
+      const btn = document.querySelector('[onclick="wyslijNotatki()"]');
+      btn.disabled = true;
+      setStatus('status-notatki', 'Bielik analizuje... proszę czekać', '');
+
+      try {
+        const res    = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, talia }),
+        });
+        const result = await res.json();
+        if (res.ok) {
+          document.getElementById('notatkiInput').value = '';
+          setStatus('status-notatki', `Wygenerowano ${result.count} fiszek!`, 'ok');
+        } else {
+          setStatus('status-notatki', result.error || 'Błąd serwera.', 'err');
+        }
+      } catch {
+        setStatus('status-notatki', 'Błąd połączenia.', 'err');
+      } finally {
+        btn.disabled = false;
       }
     }
 
