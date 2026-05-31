@@ -40,7 +40,7 @@ Sercem aplikacji są dwa modele AI dostępne przez PCSS:
 Skopiuj repozytorium i zainstaluj pakiety Node.js:
 
 ```bash
-git clone [https://github.com/TWÓJ-LINK/inteligentne-fiszki.git](https://github.com/TWÓJ-LINK/inteligentne-fiszki.git)
+git clone [https://github.com/pawelsiurek/poznai-bielik-starter](https://github.com/pawelsiurek/poznai-bielik-starter)
 cd inteligentne-fiszki/node
 npm install
 
