@@ -80,7 +80,7 @@ npm run fiszki
 
 ---
 
-## 📡 API i Endpointy
+## API i Endpointy
 
 Serwer Express udostępnia poniższe endpointy do komunikacji z frontendem.
 
@@ -98,7 +98,7 @@ Serwer Express udostępnia poniższe endpointy do komunikacji z frontendem.
 
 ---
 
-## 📂 Struktura projektu
+## Struktura projektu
 
 Katalog `node/fiszki/` zawiera całą logikę aplikacji:
 
@@ -107,6 +107,7 @@ node/fiszki/
 ├── server.js              # Główny serwer Express + Socket.io
 ├── fiszki.json            # Lokalna baza danych fiszek
 ├── prompts.json           # Plik przechowujący zapisane prompty
+├── examples_pdfs/         # Przykładowe pliki PDF do generowania fiszek (node/fiszki/examples_pdfs)
 ├── modules/
 │   ├── bielik.js          # Wrapper komunikacji z PCSS/OpenAI
 │   ├── storage.js         # Obsługa odczytu i zapisu JSON DB
@@ -123,7 +124,7 @@ node/fiszki/
 
 ---
 
-## 🔌 Zależności zewnętrzne i rozwiązywanie problemów
+## Zależności zewnętrzne i rozwiązywanie problemów
 
 ### Integracja Docling (Opcjonalna, dla PDF)
 
