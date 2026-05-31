@@ -124,6 +124,15 @@ node/fiszki/
 
 ---
 
+## Zrzuty ekranu
+
+
+![Host screen](node/fiszki/screenshots/app.jpeg)
+
+![Student screen](node/fiszki/screenshots/student.jpeg)
+
+---
+
 ## Zależności zewnętrzne i rozwiązywanie problemów
 
 ### Integracja Docling (Opcjonalna, dla PDF)
