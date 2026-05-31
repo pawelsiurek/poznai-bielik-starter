@@ -1,105 +1,138 @@
-# PoznAI Bielika — starter repo
+# Inteligentne Fiszki — PoznAI Bielik
 
-Repozytorium do warsztatu **PoznAI Bielika** (30.05.2026, Poznań).  
-Zawiera szablony startowe dla dwóch stacków: Python i Node.js.  
-Wszystko łączy się z Bielikiem przez PCSS API — zero instalacji lokalnego modelu.
+Aplikacja edukacyjna ułatwiająca naukę poprzez automatyczne generowanie fiszek z notatek, plików PDF oraz zdjęć. Projekt powstał na bazie startera z warsztatów **PoznAI Bielika** i łączy w sobie potęgę polskiego modelu językowego ze wsparciem zaawansowanego OCR.
 
----
-
-## Który stack wybrać?
-
-| Sytuacja | Ścieżka |
-|---|---|
-| Use case konwersacyjny (rizz check, Janusz mode, symulator rozmowy) | **Playground PCSS** — `llm.hpc.psnc.pl`, bez kodu |
-| Masz Pythona, use case wymaga przetwarzania plików / batch | **Python starter** → `python/` |
-| Masz Node.js/JS, use case to coś interaktywnego lub z UI | **Node starter** → `node/` |
-| Brak IT-osoby w zespole albo nie przeszło pre-setup | **Playground PCSS** (fallback) |
+Wszystko łączy się przez PCSS API (`llm.hpc.psnc.pl`) — nie wymaga instalacji żadnych modeli lokalnie!
 
 ---
 
-## Quick start (dla IT-osoby w zespole)
+## Główne modele użyte w projekcie: Bielik i Qwen
 
-### 1. Sklonuj repo
+Sercem aplikacji są dwa modele AI dostępne przez PCSS:
+
+* **Bielik — (domyślny model: `bielik_11b`):** odpowiada za dwuetapowe tworzenie fiszek (najpierw generuje trafne pytania, potem krótkie odpowiedzi) oraz za funkcję rozbudowanych wyjaśnień/mentorowania. Nazwa modelu jest konfigurowalna przez zmienną środowiskową `PCSS_MODEL`; w kodzie serwera domyślnie ustawiono `bielik_11b`.
+* **Qwen3-VL — (domyślny model: `Qwen3-VL-235B-A22B-Instruct-FP8`):** odpowiada za analizę obrazów / OCR (zamianę zdjęć podręczników na tekst). Serwer inicjalizuje klienta Qwen tym samym kluczem PCSS i domyślnym modelem `Qwen3-VL-235B-A22B-Instruct-FP8`.
+
+---
+
+## Najważniejsze funkcje
+
+* **Multiformatowy import:** Obsługa zwykłego tekstu (`.txt`), dokumentów (`.pdf` dzięki Docling) oraz zdjęć (dzięki Qwen3-VL).
+* **Tryb asystenta:** Możliwość dopytania modelu Bielik o szczegółowe wyjaśnienie konkretnej fiszki.
+* **Interaktywny frontend (Host & Student):** Prowadzący zarządza ekranem głównym, a uczniowie mogą przesyłać własne fiszki na żywo przez przeglądarkę w telefonie (dzięki Socket.io).
+* **Pełna kontrola:** Prompty sterujące generowaniem fiszek są w pełni edytowalne z poziomu interfejsu użytkownika.
+
+---
+
+## Wymagania systemowe
+
+* **Node.js** (wersja 16 lub nowsza) oraz npm.
+* **Python** (opcjonalnie, wymagany tylko do obsługi plików PDF).
+* Pakiet `docling` (Python) dla ekstrakcji tekstu z PDF.
+* **Klucz API PCSS** (token) z dostępem do modeli Bielik i Qwen.
+
+---
+
+## Szybki start (Instalacja i uruchomienie)
+
+### 1. Klonowanie i zależności
+
+Skopiuj repozytorium i zainstaluj pakiety Node.js:
 
 ```bash
-git clone https://github.com/emgiezet/poznai-bielik-starter.git
-cd poznai-bielik-starter
+git clone [https://github.com/TWÓJ-LINK/inteligentne-fiszki.git](https://github.com/TWÓJ-LINK/inteligentne-fiszki.git)
+cd inteligentne-fiszki/node
+npm install
+
 ```
 
-### 2. Ustaw klucz API
+### 2. Konfiguracja środowiska
+
+Skopiuj plik z przykładowymi zmiennymi i wklej swój klucz PCSS, który otrzymałeś na warsztatach:
 
 ```bash
 cp .env.example .env
-# edytuj .env — wklej klucz PCSS który dostałeś mailem
+
 ```
 
-### 3. Odpal hello-world (weryfikacja pre-setupu)
+**Kluczowe zmienne w `.env`:**
 
-**Python:**
+* `PCSS_API_KEY` — Twój token autoryzacyjny (wymagane).
+* `PCSS_BASE_URL` — Domyślnie `https://llm.hpc.psnc.pl/v1`.
+* `PCSS_MODEL` — Domyślnie `bielik_11b`.
+* `PORT` — Domyślnie `3000`.
+
+### 3. Uruchomienie aplikacji
+
+Będąc w katalogu głównym projektu lub w folderze `node`, uruchom serwer:
+
 ```bash
-cd python
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python hello-world.py
+npm run fiszki
+
 ```
 
-> Na Debianie/Ubuntu (i nowych dystrybucjach z Pythonem 3.12+) `pip install` poza venv zwróci błąd `externally-managed-environment` (PEP 668). Venv to obejście — i tak najczystsza opcja. Wymaga pakietu `python3-venv` (`sudo apt install python3-venv` jeśli brakuje).
+*(Alternatywnie: `node fiszki/server.js`)*
 
-**Node:**
-```bash
-cd node
-npm install
-node hello-world.js
-```
+### 4. Gotowe! Otwórz przeglądarkę
 
-Jeśli zobaczysz `✓ Połączenie z Bielikiem działa!` — jesteś gotowy. Zgłoś zieloną flagę w formularzu.
-
-### 4. Wybierz szablon
-
-Po warsztacie wróć do katalogu swojego stacku i wejdź w wybrany starter:
-
-| Szablon | Kiedy użyć |
-|---|---|
-| `chat-starter/` | Use case oparty na rozmowie (custom persona, scenariusz) |
-| `pipeline-starter/` | Wczytaj plik → Bielik → zapisz wynik |
-| `multi-step-starter/` | Dwa etapy: najpierw ekstrakcja, potem transformacja |
-
-Każdy folder ma swój `README.md` z instrukcją i pomysłami.
+* **Panel Główny (Host):** `http://localhost:3000`
+* **Panel Ucznia (do udostępnienia przez QR):** `http://<twoje-lokalne-ip>:3000/student.html`
 
 ---
 
-## Struktura repo
+## 📡 API i Endpointy
 
-```
-poznai-bielik-starter/
-├── .env.example          ← skopiuj do .env i wklej klucz
-├── python/
-│   ├── hello-world.py    ← test pre-setupu
-│   ├── requirements.txt
-│   ├── chat-starter/
-│   ├── pipeline-starter/
-│   └── multi-step-starter/
-└── node/
-    ├── hello-world.js    ← test pre-setupu
-    ├── package.json
-    ├── chat-starter/
-    ├── pipeline-starter/
-    └── multi-step-starter/
+Serwer Express udostępnia poniższe endpointy do komunikacji z frontendem.
+
+| Metoda | Endpoint | Opis |
+| --- | --- | --- |
+| **GET** | `/api/capabilities` | Zwraca status dostępności Docling, Qwen i obsługiwanych formatów. |
+| **GET** | `/api/fiszki` | Pobiera wszystkie zapisane fiszki w formacie JSON. |
+| **POST** | `/api/fiszki` | Dodaje nową fiszkę. Oczekuje payloadu: `{ przod, tyl, talia }`. |
+| **PUT** | `/api/fiszki/:id` | Aktualizuje istniejącą fiszkę. |
+| **DELETE** | `/api/fiszki/:id` | Usuwa fiszkę z bazy. |
+| **POST** | `/api/upload` | Wysyła plik (PDF, TXT, Obraz). Uruchamia ekstrakcję i generowanie fiszek. |
+| **POST** | `/api/generate` | Generuje fiszki ze zwykłego tekstu: `{ text, talia }`. |
+| **POST** | `/api/explain` | **[Bielik]** Generuje szczegółowe wyjaśnienie dla fiszki: `{ przod, tyl }`. |
+| **GET** | `/api/decks` | Zwraca listę dostępnych talii. |
+
+---
+
+## 📂 Struktura projektu
+
+Katalog `node/fiszki/` zawiera całą logikę aplikacji:
+
+```text
+node/fiszki/
+├── server.js              # Główny serwer Express + Socket.io
+├── fiszki.json            # Lokalna baza danych fiszek
+├── prompts.json           # Plik przechowujący zapisane prompty
+├── modules/
+│   ├── bielik.js          # Wrapper komunikacji z PCSS/OpenAI
+│   ├── storage.js         # Obsługa odczytu i zapisu JSON DB
+│   ├── tokenizer.js       # Dzielenie tekstu na chunki (estymacja tokenów)
+│   ├── config.js          # Wczytywanie i zarządzanie promptami
+│   └── extractors/        # Ekstraktory danych (.txt, .pdf z Docling, obrazy z Qwen)
+└── public/                # Frontend aplikacji
+    ├── index.html         # Główny widok (SPA) z trybem nauki
+    ├── app.js             # Logika klienta, API i Socket.io
+    ├── student.html       # Uproszczony interfejs dla ucznia
+    └── style.css          # Arkusz stylów
+
 ```
 
 ---
 
-## Problemy?
+## 🔌 Zależności zewnętrzne i rozwiązywanie problemów
 
-- Błąd `401 Unauthorized` → dwie możliwości:
-  - `invalid api key` / `authentication` → klucz PCSS nieprawidłowy lub nie ma go w `.env`
-  - `team_model_access_denied` / `team not allowed to access model` → klucz **działa**, ale Twój team nie ma dostępu do modelu z `PCSS_MODEL`. Listę dostępnych modeli sprawdzisz tak:
-    ```bash
-    curl -sS https://llm.hpc.psnc.pl/v1/models -H "Authorization: Bearer $PCSS_API_KEY" | python3 -m json.tool
-    ```
-    Domyślna nazwa Bielika na PCSS to `bielik_11b` (z podkreślnikiem, nie `bielik-11b-v2.3-instruct`).
-- Błąd `Connection refused` / `Name or service not known` → sprawdź WiFi i `PCSS_BASE_URL` w `.env`
-- Błąd `Model not found` → zapytaj prowadzącego o aktualną nazwę modelu
+### Integracja Docling (Opcjonalna, dla PDF)
 
-Discord społeczności Bielika: link na slajdach warsztatu.
+Jeśli chcesz generować fiszki z PDF, potrzebujesz Pythona i biblioteki `docling`. Bez niej przetwarzanie PDF będzie wyłączone, ale TXT i obrazy (Qwen) nadal będą działać.
+Aby zainstalować: `pip install docling` (pamiętaj, że przy pierwszym uruchomieniu pobierze ok. 1-2 GB modeli). Najlepiej używać wirtualnego środowiska (`venv`).
+
+### Problemy i błędy
+
+* **Błąd `401 Unauthorized`:** Twój token w `.env` jest pusty lub niepoprawny. Upewnij się, że używasz poprawnego klucza `PCSS_API_KEY`.
+* **Ostrzeżenie o braku Docling:** Pojawia się w logach, jeśli biblioteka Python nie jest w ścieżce `PATH`. Wykonaj instalację z instrukcji wyżej.
+* **Błąd `EADDRINUSE`:** Port `3000` jest już zajęty przez inną aplikację. Zabij proces lub zmień wartość `PORT` w pliku `.env`.
+* **Długi czas ładowania zdjęć:** Model OCR Qwen3-VL przetwarza obrazki i analizuje tekst, co może trwać kilka-kilkanaście sekund w zależności od obciążenia serwerów PCSS.
